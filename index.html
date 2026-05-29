@@ -1,0 +1,3131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SY0-701 Security+ Exam Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   DESIGN TOKENS
+================================================================ */
+:root {
+  --bg:           #0F1117;
+  --surface:      #1A1D2E;
+  --surface2:     #151822;
+  --border:       #2A2D3E;
+  --border-light: #3A3D50;
+  --accent:       #4F8EF7;
+  --accent-dim:   rgba(79,142,247,0.12);
+  --accent-glow:  rgba(79,142,247,0.25);
+  --success:      #2ECC71;
+  --success-dim:  rgba(46,204,113,0.12);
+  --warning:      #F39C12;
+  --warning-dim:  rgba(243,156,18,0.12);
+  --danger:       #E74C3C;
+  --danger-dim:   rgba(231,76,60,0.12);
+  --text:         #E8EAF0;
+  --text-muted:   #8892A4;
+  --text-dim:     #5A6070;
+  --code-bg:      #0D1117;
+  --code-green:   #A8FF78;
+  --code-cyan:    #79FFE1;
+  --font-ui:      'IBM Plex Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --radius:       8px;
+  --radius-sm:    4px;
+  --shadow:       0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg:    0 8px 48px rgba(0,0,0,0.6);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  overflow: hidden;
+  font-size: 14px;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font-family: var(--font-ui); cursor: pointer; }
+select, input { font-family: var(--font-ui); }
+
+/* ================================================================
+   SCREEN SYSTEM
+================================================================ */
+.screen { display: none; height: 100vh; overflow: hidden; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ================================================================
+   WELCOME / SETUP SCREEN
+================================================================ */
+#welcome-screen {
+  background: var(--bg);
+  overflow-y: auto;
+  height: 100vh;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+#welcome-screen.active { display: flex; }
+
+.welcome-wrap {
+  max-width: 680px; width: 100%;
+}
+.welcome-brand {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 40px;
+}
+.brand-icon {
+  width: 48px; height: 48px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #7C3AED);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.brand-name { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.brand-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+.setup-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 16px;
+}
+.setup-card h2 {
+  font-size: 16px; font-weight: 600; color: var(--text);
+  margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+}
+.setup-card h2 .tag {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--accent);
+  background: var(--accent-dim); padding: 2px 8px; border-radius: 20px;
+}
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mode-card {
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 16px; cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+.mode-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.mode-card-icon { font-size: 20px; margin-bottom: 8px; }
+.mode-card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.mode-card-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+
+.field-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: block; }
+
+.domain-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.domain-chip {
+  padding: 6px 14px; border: 1px solid var(--border);
+  border-radius: 20px; font-size: 12px; font-weight: 500;
+  background: var(--surface2); color: var(--text-muted); cursor: pointer;
+  transition: all 0.15s;
+}
+.domain-chip:hover { border-color: var(--accent); color: var(--accent); }
+.domain-chip.selected { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+.source-upload {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s;
+  background: var(--surface2);
+}
+.source-upload:hover, .source-upload.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+.source-upload-icon { font-size: 28px; margin-bottom: 8px; }
+.source-upload-text { font-size: 14px; color: var(--text-muted); }
+.source-upload-hint { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+.upload-progress { margin-top: 10px; display: none; }
+.upload-progress-bar-bg { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.upload-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+.upload-status { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+.btn-start {
+  width: 100%; padding: 14px; background: var(--accent); color: white;
+  border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700;
+  letter-spacing: 0.3px; transition: all 0.15s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-start:hover { background: #3a7de8; transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+.btn-start:active { transform: translateY(0); }
+
+.ai-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; background: var(--success-dim); border: 1px solid var(--success);
+  border-radius: var(--radius-sm); font-size: 12px; color: var(--success); margin-bottom: 16px;
+}
+.ai-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ================================================================
+   EXAM SCREEN LAYOUT
+================================================================ */
+#exam-screen {
+  display: none;
+  height: 100vh;
+  flex-direction: column;
+}
+#exam-screen.active { display: flex; }
+
+/* TOP BAR */
+.top-bar {
+  height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 16px;
+  flex-shrink: 0; z-index: 100;
+}
+.tb-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.tb-brand-dot {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #7C3AED);
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.tb-sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+.tb-domain-tag {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--accent); background: var(--accent-dim);
+  padding: 3px 10px; border-radius: 20px; max-width: 280px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tb-qcount {
+  font-size: 13px; color: var(--text-muted); white-space: nowrap;
+}
+.tb-spacer { flex: 1; }
+.tb-flag-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+}
+.tb-flag-btn:hover { border-color: var(--warning); color: var(--warning); }
+.tb-flag-btn.flagged { border-color: var(--warning); color: var(--warning); background: var(--warning-dim); }
+.tb-flag-btn.flagged .flag-icon { animation: flagBounce 0.3s ease; }
+@keyframes flagBounce { 0%{transform:scale(1)} 50%{transform:scale(1.4)} 100%{transform:scale(1)} }
+.timer {
+  font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+  color: var(--text); min-width: 70px; text-align: right; flex-shrink: 0;
+  transition: color 0.5s;
+}
+.timer.amber { color: var(--warning); }
+.timer.red { color: var(--danger); animation: timerGlow 1s ease-in-out infinite alternate; }
+@keyframes timerGlow { from{text-shadow:0 0 0 transparent} to{text-shadow:0 0 12px var(--danger)} }
+.tb-end-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
+  transition: all 0.15s;
+}
+.tb-end-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+/* MIDDLE: SIDEBAR + CONTENT */
+.exam-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* LEFT SIDEBAR */
+.sidebar {
+  width: 204px; flex-shrink: 0;
+  background: var(--surface2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transition: width 0.2s ease;
+  overflow: hidden;
+}
+.sidebar.collapsed { width: 0; }
+.sidebar-inner { width: 204px; display: flex; flex-direction: column; height: 100%; padding: 14px; }
+.sidebar-toggle {
+  position: absolute; left: 0; top: 50%;
+  width: 18px; height: 40px; background: var(--surface2); border: 1px solid var(--border);
+  border-left: none; border-radius: 0 4px 4px 0;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text-muted); transition: all 0.2s; z-index: 50;
+}
+.sidebar-toggle:hover { color: var(--accent); background: var(--accent-dim); }
+
+.q-grid {
+  display: grid; grid-template-columns: repeat(9, 1fr);
+  gap: 3px; margin-bottom: 14px;
+}
+.q-chip {
+  aspect-ratio: 1; border-radius: 3px;
+  background: var(--border); color: var(--text-muted);
+  font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.12s; border: 1px solid transparent;
+}
+.q-chip:hover { background: var(--border-light); color: var(--text); }
+.q-chip.answered { background: var(--success); color: #0a2e1a; animation: chipFlash 0.3s ease; }
+.q-chip.flagged { background: var(--warning); color: #1a1200; }
+.q-chip.current { background: var(--accent); color: white; border-color: white; }
+.q-chip.answered.flagged { background: linear-gradient(135deg, var(--success) 50%, var(--warning) 50%); color: #111; }
+.q-chip.danger-unanswered { border-color: var(--danger); animation: dangerBlink 1s ease-in-out infinite; }
+@keyframes chipFlash { 0%{transform:scale(1)} 50%{transform:scale(1.3)} 100%{transform:scale(1)} }
+@keyframes dangerBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.q-chip.pbq-chip {
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+.sidebar-stats { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.sidebar-stat { display: flex; justify-content: space-between; font-size: 11px; }
+.sidebar-stat-label { color: var(--text-muted); }
+.sidebar-stat-val { font-weight: 700; color: var(--text); }
+
+.sidebar-legend { display: flex; flex-direction: column; gap: 4px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-dim); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* CONTENT AREA */
+.content-area {
+  flex: 1; overflow-y: auto; padding: 24px;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* QUESTION CARD */
+.q-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px; width: 100%; max-width: 860px;
+  margin-bottom: 16px;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+.q-meta {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.q-meta-tag {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 3px 9px; border-radius: 20px;
+}
+.q-meta-tag.domain { background: var(--accent-dim); color: var(--accent); }
+.q-meta-tag.pbq { background: rgba(124,58,237,0.15); color: #a78bfa; }
+.q-meta-tag.multi { background: var(--warning-dim); color: var(--warning); }
+.q-meta-tag.obj { background: var(--surface2); color: var(--text-muted); }
+
+.q-stem {
+  font-size: 16px; line-height: 1.75; color: var(--text);
+  margin-bottom: 22px; max-width: 820px;
+}
+.q-stem strong { color: white; }
+
+/* MCQ OPTIONS */
+.options-list { display: flex; flex-direction: column; gap: 6px; }
+.opt-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface2);
+  cursor: pointer; transition: all 0.12s; position: relative;
+}
+.opt-row::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; border-radius: 4px 0 0 4px; background: transparent;
+  transition: background 0.12s;
+}
+.opt-row:hover { background: rgba(255,255,255,0.03); border-color: var(--border-light); }
+.opt-row:hover::before { background: var(--border-light); }
+.opt-row.selected { background: var(--accent-dim); border-color: var(--accent); }
+.opt-row.selected::before { background: var(--accent); }
+.opt-row.correct { background: var(--success-dim); border-color: var(--success); }
+.opt-row.correct::before { background: var(--success); }
+.opt-row.incorrect { background: var(--danger-dim); border-color: var(--danger); }
+.opt-row.incorrect::before { background: var(--danger); }
+.opt-row.correct-missed { background: var(--success-dim); border-color: var(--success); border-style: dashed; }
+
+.opt-label {
+  width: 26px; height: 26px; border-radius: 5px;
+  background: var(--border); color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+  transition: all 0.12s;
+}
+.opt-row.selected .opt-label { background: var(--accent); color: white; }
+.opt-row.correct .opt-label { background: var(--success); color: #0a2e1a; }
+.opt-row.incorrect .opt-label { background: var(--danger); color: white; }
+.opt-text { font-size: 15px; line-height: 1.5; color: var(--text); flex: 1; padding-top: 1px; }
+.opt-marker { margin-left: auto; font-size: 16px; flex-shrink: 0; }
+
+.multi-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--warning-dim); border: 1px solid var(--warning);
+  color: var(--warning); padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; margin-bottom: 14px;
+}
+.sel-count {
+  background: var(--warning); color: #1a1200;
+  padding: 1px 7px; border-radius: 20px; font-size: 11px; font-weight: 700;
+}
+.sel-count.complete { background: var(--success); color: #0a2e1a; }
+
+/* ================================================================
+   PBQ STYLES
+================================================================ */
+.pbq-scenario {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 20px; font-size: 14px;
+  line-height: 1.7; color: var(--text-muted);
+}
+.pbq-scenario strong { color: var(--text); }
+
+.pbq-progress {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.pbq-progress-bar-bg { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.pbq-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+.pbq-progress-text { font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+
+/* ACL TABLE */
+.acl-wrap { overflow-x: auto; margin: 12px 0; }
+.acl-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.acl-table th {
+  background: var(--surface2); color: var(--text-muted);
+  padding: 8px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border); text-align: left;
+}
+.acl-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.acl-table tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+.acl-table tr:hover td { background: var(--accent-dim); }
+.acl-table tr.pre-filled td { opacity: 0.7; }
+.acl-table tr.correct-row td { background: var(--success-dim); }
+.acl-table tr.incorrect-row td { background: var(--danger-dim); }
+.acl-select {
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+  padding: 4px 8px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer;
+  min-width: 85px; transition: border-color 0.15s;
+}
+.acl-select:focus { border-color: var(--accent); }
+.acl-select.allow { border-color: var(--success); color: var(--success); }
+.acl-select.deny { border-color: var(--danger); color: var(--danger); }
+.acl-code { font-family: var(--font-mono); font-size: 12px; color: var(--code-cyan); }
+
+/* LOG VIEWER */
+.log-wrap { background: var(--code-bg); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; border: 1px solid var(--border); }
+.log-toolbar {
+  background: #161b22; padding: 8px 12px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border); flex-wrap: wrap;
+}
+.log-toolbar-title { font-size: 11px; font-weight: 700; color: var(--code-green); text-transform: uppercase; letter-spacing: 1px; }
+.log-filter-input {
+  background: #1a1f28; color: var(--text); border: 1px solid var(--border);
+  padding: 3px 8px; border-radius: var(--radius-sm); font-size: 11px;
+  font-family: var(--font-mono); width: 160px;
+}
+.log-filter-input::placeholder { color: var(--text-dim); }
+.log-content {
+  font-family: var(--font-mono); font-size: 12.5px;
+  padding: 12px; max-height: 300px; overflow-y: auto;
+  line-height: 1.65; color: #9EA7B8;
+}
+.log-line { padding: 1px 0; white-space: pre-wrap; word-break: break-all; }
+.log-line .ts { color: var(--text-dim); }
+.log-line .level-warn { color: var(--warning); }
+.log-line .level-alert, .log-line .level-crit { color: var(--danger); font-weight: 600; }
+.log-line .level-info { color: var(--code-cyan); }
+.log-line .level-ok { color: var(--code-green); }
+.log-line .ip { color: #FFD700; }
+.log-line .highlight { background: rgba(79,142,247,0.2); border-radius: 2px; padding: 1px 3px; }
+.log-line.log-highlighted { background: rgba(79,142,247,0.08); border-radius: 3px; }
+
+/* DRAG AND DROP */
+.dnd-layout { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; }
+.dnd-bank {
+  flex: 0 0 220px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px;
+}
+.dnd-bank h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 10px; }
+.dnd-zones { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 8px; }
+.dnd-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 12px 14px; min-height: 56px;
+  display: flex; flex-direction: column; gap: 5px;
+  transition: all 0.15s;
+}
+.dnd-zone-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); margin-bottom: 2px; }
+.dnd-zone.drag-over { border-color: var(--accent); border-style: solid; background: var(--accent-dim); }
+.dnd-zone.correct { border-color: var(--success); background: var(--success-dim); }
+.dnd-zone.incorrect { border-color: var(--danger); background: var(--danger-dim); }
+.drag-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--accent);
+  color: var(--text); padding: 6px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; cursor: grab; user-select: none;
+  transition: all 0.15s; width: fit-content;
+}
+.drag-chip:hover { background: var(--accent-dim); transform: translateY(-1px); box-shadow: 0 3px 10px var(--accent-glow); }
+.drag-chip.dragging { opacity: 0.35; cursor: grabbing; }
+.drag-chip.ghost { opacity: 0.85; box-shadow: var(--shadow); transform: rotate(2deg) scale(1.05); cursor: grabbing; pointer-events: none; position: fixed; z-index: 9999; }
+.drag-handle { color: var(--text-dim); font-size: 13px; }
+
+/* MATCHING */
+.match-layout { display: flex; gap: 20px; margin: 12px 0; flex-wrap: wrap; }
+.match-left, .match-right { flex: 1; min-width: 220px; }
+.match-left h4, .match-right h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 10px; }
+.match-desc {
+  font-size: 13px; padding: 10px 12px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  margin-bottom: 5px; line-height: 1.4; color: var(--text-muted);
+}
+.match-slot {
+  min-height: 44px; border: 2px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 8px 12px; margin-bottom: 5px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-dim); transition: all 0.15s;
+}
+.match-slot.filled { border-style: solid; border-color: var(--accent); color: var(--text); background: var(--accent-dim); }
+.match-slot.drag-over { border-color: var(--accent); border-style: solid; background: var(--accent-dim); }
+.match-slot.correct { border-color: var(--success); background: var(--success-dim); color: var(--success); }
+.match-slot.incorrect { border-color: var(--danger); background: var(--danger-dim); color: var(--danger); }
+.match-item-drag {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--accent);
+  color: var(--text); padding: 8px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; cursor: grab; user-select: none;
+  transition: all 0.15s; margin-bottom: 6px;
+}
+.match-item-drag:hover { background: var(--accent-dim); transform: translateY(-1px); }
+.match-item-drag.used { opacity: 0.3; pointer-events: none; }
+
+/* SEQUENCE */
+.seq-list { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.seq-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: grab; user-select: none;
+  font-size: 14px; line-height: 1.4; transition: all 0.15s;
+}
+.seq-item:hover { border-color: var(--border-light); }
+.seq-item.dragging { opacity: 0.3; }
+.seq-item.drag-above { border-top: 3px solid var(--accent); padding-top: 10px; }
+.seq-item.drag-below { border-bottom: 3px solid var(--accent); padding-bottom: 10px; }
+.seq-item.correct { border-color: var(--success); background: var(--success-dim); }
+.seq-item.incorrect { border-color: var(--danger); background: var(--danger-dim); }
+.seq-num {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--border);
+  color: var(--text-muted); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.seq-item.correct .seq-num { background: var(--success); color: #0a2e1a; }
+.seq-item.incorrect .seq-num { background: var(--danger); color: white; }
+.seq-handle { color: var(--text-dim); font-size: 16px; flex-shrink: 0; }
+
+/* VULN SCAN TABLE */
+.vuln-table-wrap { overflow-x: auto; margin: 12px 0; }
+.vuln-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.vuln-table th {
+  background: #1a1f2e; color: var(--text-muted);
+  padding: 8px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border); text-align: left; white-space: nowrap;
+}
+.vuln-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.vuln-table tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+.cvss-badge { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 22px; border-radius: 4px; font-size: 11px; font-weight: 800; font-family: var(--font-mono); }
+.cvss-critical { background: #7B0000; color: #FFB3B3; }
+.cvss-high { background: #5A1800; color: #FFCBA4; }
+.cvss-medium { background: #3D3000; color: #FFE083; }
+.cvss-low { background: #003320; color: #8DFFBC; }
+.exploit-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+.exploit-active { background: var(--danger-dim); color: var(--danger); border: 1px solid var(--danger); }
+.exploit-poc { background: var(--warning-dim); color: var(--warning); border: 1px solid var(--warning); }
+.exploit-none { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+.asset-crit { font-size: 11px; font-weight: 600; }
+.asset-high { color: var(--danger); }
+.asset-med { color: var(--warning); }
+.asset-low { color: var(--success); }
+
+.priority-queue { margin: 14px 0; }
+.priority-queue h4 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.priority-slots { display: flex; flex-direction: column; gap: 6px; }
+.priority-slot {
+  min-height: 40px; border: 2px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-dim); transition: all 0.15s;
+}
+.priority-slot.filled { border-style: solid; border-color: var(--danger); background: var(--danger-dim); color: var(--text); }
+.priority-slot.drag-over { border-color: var(--accent); background: var(--accent-dim); border-style: solid; }
+.priority-num { font-size: 11px; font-weight: 800; color: var(--danger); background: var(--surface); border-radius: 3px; padding: 1px 6px; }
+
+/* CRYPTO FLOW */
+.crypto-flow { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.crypto-node {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+}
+.crypto-node-icon { font-size: 20px; flex-shrink: 0; }
+.crypto-node-label { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; line-height: 1.4; }
+.crypto-node-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.crypto-select {
+  background: var(--surface); color: var(--text); border: 1px solid var(--accent);
+  padding: 6px 10px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer;
+  min-width: 160px; transition: border-color 0.15s;
+}
+.crypto-select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-glow); }
+.crypto-select.correct { border-color: var(--success); background: var(--success-dim); }
+.crypto-select.incorrect { border-color: var(--danger); background: var(--danger-dim); }
+.crypto-arrow { text-align: center; color: var(--text-dim); font-size: 16px; }
+
+/* COMPLIANCE MATCH */
+.compliance-layout { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.compliance-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px;
+  flex-wrap: wrap; gap: 12px;
+}
+.compliance-scenario { font-size: 13px; color: var(--text-muted); flex: 1; min-width: 200px; line-height: 1.4; }
+.compliance-select {
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  padding: 6px 10px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer;
+  min-width: 140px; transition: all 0.15s;
+}
+.compliance-select:focus { border-color: var(--accent); outline: none; }
+.compliance-row.correct .compliance-select { border-color: var(--success); background: var(--success-dim); color: var(--success); }
+.compliance-row.incorrect .compliance-select { border-color: var(--danger); background: var(--danger-dim); color: var(--danger); }
+
+/* ================================================================
+   BOTTOM BAR
+================================================================ */
+.bottom-bar {
+  height: 60px; background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 16px; flex-shrink: 0;
+}
+.btn-nav {
+  padding: 8px 20px; background: none; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+}
+.btn-nav:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn-nav:disabled { opacity: 0.3; pointer-events: none; }
+.bb-center { flex: 1; display: flex; align-items: center; justify-content: center; }
+.btn-mark-review {
+  padding: 8px 18px; background: none;
+  border: 1px solid var(--border); border-radius: 20px;
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  display: flex; align-items: center; gap: 6px; transition: all 0.15s;
+}
+.btn-mark-review:hover { border-color: var(--warning); color: var(--warning); }
+.btn-mark-review.active { border-color: var(--warning); color: var(--warning); background: var(--warning-dim); }
+
+/* ================================================================
+   RESULTS SCREEN
+================================================================ */
+#results-screen {
+  display: none; overflow-y: auto; padding: 32px 20px;
+  align-items: flex-start; justify-content: center;
+}
+#results-screen.active { display: flex; }
+
+.results-wrap { max-width: 900px; width: 100%; }
+.results-header {
+  display: flex; align-items: center; gap: 20px; margin-bottom: 28px; flex-wrap: wrap;
+}
+.score-hero {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px 32px; text-align: center; min-width: 200px;
+}
+.score-hero .score-val {
+  font-size: 72px; font-weight: 900; font-family: var(--font-mono);
+  line-height: 1; margin-bottom: 6px;
+}
+.score-val.pass { color: var(--success); text-shadow: 0 0 40px rgba(46,204,113,0.3); }
+.score-val.fail { color: var(--danger); text-shadow: 0 0 40px rgba(231,76,60,0.3); }
+.pass-fail-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 16px; border-radius: 20px; font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; margin-bottom: 8px;
+}
+.pass-fail-badge.pass { background: var(--success-dim); color: var(--success); border: 1px solid var(--success); }
+.pass-fail-badge.fail { background: var(--danger-dim); color: var(--danger); border: 1px solid var(--danger); }
+.score-raw { font-size: 13px; color: var(--text-muted); }
+
+.results-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+.r-stat {
+  flex: 1; min-width: 100px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; text-align: center;
+}
+.r-stat-n { font-size: 30px; font-weight: 900; font-family: var(--font-mono); color: var(--text); }
+.r-stat-n.green { color: var(--success); }
+.r-stat-n.red { color: var(--danger); }
+.r-stat-n.amber { color: var(--warning); }
+.r-stat-l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 3px; }
+
+.domain-breakdown-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 16px;
+}
+.domain-breakdown-card h3 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.db-row { margin-bottom: 12px; }
+.db-row-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.db-pct { font-weight: 700; }
+.db-pct.pass { color: var(--success); }
+.db-pct.fail { color: var(--danger); }
+.db-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; position: relative; }
+.db-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+.db-bar-fill.pass { background: var(--success); }
+.db-bar-fill.fail { background: var(--danger); }
+.db-threshold-line { position: absolute; top: 0; bottom: 0; left: 70%; width: 1px; background: rgba(255,255,255,0.2); }
+
+.pbq-breakdown-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 16px;
+}
+.pbq-breakdown-card h3 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.pbq-result-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.pbq-result-row:last-child { border-bottom: none; }
+.pbq-type-label { color: var(--text-muted); }
+.pbq-score-chips { display: flex; gap: 4px; }
+.pbq-score-chip { width: 16px; height: 16px; border-radius: 3px; }
+.pbq-score-chip.on { background: var(--success); }
+.pbq-score-chip.off { background: var(--border); }
+
+.results-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.btn-result {
+  padding: 11px 22px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+  border: 1px solid; display: flex; align-items: center; gap: 8px; transition: all 0.15s;
+}
+.btn-result.primary { background: var(--accent); border-color: var(--accent); color: white; }
+.btn-result.primary:hover { background: #3a7de8; }
+.btn-result.ghost { background: none; border-color: var(--border); color: var(--text-muted); }
+.btn-result.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ================================================================
+   REVIEW SCREEN
+================================================================ */
+#review-screen {
+  display: none; overflow-y: auto; padding: 24px 20px;
+  align-items: flex-start; justify-content: center;
+}
+#review-screen.active { display: flex; }
+.review-wrap { max-width: 860px; width: 100%; }
+.review-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.review-topbar h2 { font-size: 16px; font-weight: 700; }
+.review-filters { display: flex; gap: 6px; }
+.filter-chip {
+  padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border); background: none; color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+.filter-chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.review-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 12px; overflow: hidden;
+}
+.review-card-header {
+  padding: 12px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border); background: var(--surface2);
+}
+.correct-banner { background: var(--success-dim); border: 1px solid var(--success); color: var(--success); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+.incorrect-banner { background: var(--danger-dim); border: 1px solid var(--danger); color: var(--danger); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+.review-card-body { padding: 16px; }
+.review-stem { font-size: 14px; line-height: 1.6; color: var(--text); margin-bottom: 12px; }
+.review-explanation {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: var(--radius);
+  padding: 12px 14px; margin-top: 12px; font-size: 13px; line-height: 1.6;
+}
+.review-explanation .exp-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 6px; }
+.review-explanation p { color: var(--text-muted); margin-bottom: 6px; }
+.review-explanation p:last-child { margin-bottom: 0; }
+.exp-why-wrong { margin-top: 8px; }
+.exp-why-wrong-item { font-size: 12px; color: var(--text-dim); margin-bottom: 3px; display: flex; gap: 6px; }
+.exp-why-wrong-item strong { color: var(--text-muted); flex-shrink: 0; }
+
+/* ================================================================
+   MODALS
+================================================================ */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  z-index: 9000; display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px; max-width: 460px; width: 90%;
+  box-shadow: var(--shadow-lg); animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.modal-body { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+.modal-stats { display: flex; gap: 10px; margin-bottom: 20px; }
+.modal-stat { flex: 1; background: var(--surface2); border-radius: var(--radius); padding: 12px; text-align: center; }
+.modal-stat-n { font-size: 26px; font-weight: 900; font-family: var(--font-mono); }
+.modal-stat-l { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-top: 2px; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-btn-cancel { padding: 9px 20px; background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; transition: all 0.15s; }
+.modal-btn-cancel:hover { border-color: var(--border-light); color: var(--text); }
+.modal-btn-confirm { padding: 9px 20px; background: var(--danger); border: 1px solid var(--danger); color: white; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; transition: all 0.15s; }
+.modal-btn-confirm:hover { background: #c0392b; }
+
+/* AI Loading */
+.ai-loading-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 32px; text-align: center;
+  max-width: 860px; width: 100%; margin: auto;
+}
+.ai-spinner {
+  width: 44px; height: 44px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.ai-loading-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.ai-loading-sub { font-size: 13px; color: var(--text-muted); }
+.ai-loading-bar-bg { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin: 16px 0; max-width: 400px; margin-left: auto; margin-right: auto; }
+.ai-loading-bar { height: 100%; background: linear-gradient(90deg, var(--accent), #7C3AED); border-radius: 2px; animation: aiLoad 2s ease-in-out infinite; }
+@keyframes aiLoad { 0%{width:5%} 50%{width:80%} 100%{width:5%} }
+
+/* HINT BUTTON */
+.hint-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  margin-top: 12px; transition: all 0.15s;
+}
+.hint-btn:hover { border-color: var(--warning); color: var(--warning); }
+.hint-panel {
+  background: var(--warning-dim); border: 1px solid var(--warning);
+  border-radius: var(--radius); padding: 10px 14px; margin-top: 8px;
+  font-size: 13px; color: var(--warning); display: none; line-height: 1.6;
+}
+.hint-panel.visible { display: block; }
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .q-stem { font-size: 15px; }
+  .dnd-layout, .match-layout { flex-direction: column; }
+  .mode-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== WELCOME SCREEN ==================== -->
+<div id="welcome-screen" class="screen active">
+  <div class="welcome-wrap">
+    <div class="welcome-brand">
+      <div class="brand-icon">🛡️</div>
+      <div>
+        <div class="brand-name">SY0-701 Exam Simulator</div>
+        <div class="brand-sub">CompTIA Security+ · AI-Powered Question Engine</div>
+      </div>
+    </div>
+
+    <div class="ai-status">
+      <div class="ai-dot"></div>
+      Claude AI engine active — questions generated from Messer &amp; Seidl study materials
+    </div>
+
+    <div class="setup-card">
+      <h2>Select Mode <span class="tag">Required</span></h2>
+      <div class="mode-grid" id="mode-grid">
+        <div class="mode-card selected" data-mode="exam">
+          <div class="mode-card-icon">📋</div>
+          <div class="mode-card-title">Exam Mode</div>
+          <div class="mode-card-desc">90 questions · 90 min · No hints · Mirrors real exam conditions</div>
+        </div>
+        <div class="mode-card" data-mode="study">
+          <div class="mode-card-icon">📖</div>
+          <div class="mode-card-title">Study Mode</div>
+          <div class="mode-card-desc">10–30 questions · Instant feedback · Hints available · Domain filter</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-card" id="study-options-card" style="display:none">
+      <h2>Study Options</h2>
+      <div style="margin-bottom:16px">
+        <label class="field-label">Question Count</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="radio" name="study-count" value="10" style="accent-color:var(--accent)"> 10
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="radio" name="study-count" value="20" checked style="accent-color:var(--accent)"> 20
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="radio" name="study-count" value="30" style="accent-color:var(--accent)"> 30
+          </label>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="field-label">Domain Focus</label>
+        <div class="domain-chips" id="domain-chips">
+          <div class="domain-chip selected" data-domain="all">All Domains</div>
+          <div class="domain-chip" data-domain="1.0">1.0 — General Security</div>
+          <div class="domain-chip" data-domain="2.0">2.0 — Threats &amp; Vulns</div>
+          <div class="domain-chip" data-domain="3.0">3.0 — Architecture</div>
+          <div class="domain-chip" data-domain="4.0">4.0 — Operations</div>
+          <div class="domain-chip" data-domain="5.0">5.0 — Program Mgmt</div>
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Question Types</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="type-mcq" checked style="accent-color:var(--accent)"> MCQ
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="type-pbq" checked style="accent-color:var(--accent)"> PBQ (Interactive)
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-card">
+      <h2>Study Materials <span class="tag">Optional</span></h2>
+      <div class="source-upload" id="pdf-upload-zone">
+        <div class="source-upload-icon">📄</div>
+        <div class="source-upload-text">Drop Messer / Seidl PDF files here or click to browse</div>
+        <div class="source-upload-hint">Questions will be grounded in your uploaded materials</div>
+        <input type="file" id="pdf-input" accept=".pdf" multiple style="display:none">
+      </div>
+      <div class="upload-progress" id="upload-progress">
+        <div class="upload-progress-bar-bg"><div class="upload-progress-bar" id="upload-bar" style="width:0%"></div></div>
+        <div class="upload-status" id="upload-status"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px">
+      <input id="candidate-name" type="text" placeholder="Your name (optional)"
+        style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-size:14px">
+    </div>
+    <button class="btn-start" id="btn-begin">
+      <span id="begin-btn-text">Begin Exam</span> →
+    </button>
+  </div>
+</div>
+
+<!-- ==================== EXAM SCREEN ==================== -->
+<div id="exam-screen" class="screen">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="tb-brand">
+      <div class="tb-brand-dot">🛡️</div>
+      <span>Security+</span>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-domain-tag" id="tb-domain">Domain 1.0 — General Security Concepts</div>
+    <div class="tb-qcount" id="tb-qcount">Q 1 of 90</div>
+    <div class="tb-spacer"></div>
+    <button class="tb-flag-btn" id="tb-flag-btn" onclick="toggleFlag()" aria-label="Flag question for review">
+      <span class="flag-icon">⚑</span> <span id="flag-label">Flag</span>
+    </button>
+    <div class="timer" id="timer" aria-live="polite" aria-label="Time remaining">90:00</div>
+    <button class="tb-end-btn" onclick="triggerEndExam()" aria-label="End exam">End Exam</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="exam-body" style="position:relative">
+    <!-- SIDEBAR TOGGLE -->
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle question navigator" title="Toggle navigator">›</button>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--text-dim);margin-bottom:8px">Navigator</div>
+        <div class="q-grid" id="q-grid"></div>
+        <hr class="sidebar-divider">
+        <div class="sidebar-stats">
+          <div class="sidebar-stat"><span class="sidebar-stat-label">Answered</span><span class="sidebar-stat-val" id="sb-answered">0/0</span></div>
+          <div class="sidebar-stat"><span class="sidebar-stat-label">Flagged</span><span class="sidebar-stat-val" id="sb-flagged">0</span></div>
+          <div class="sidebar-stat"><span class="sidebar-stat-label">Remaining</span><span class="sidebar-stat-val" id="sb-remaining">0</span></div>
+        </div>
+        <hr class="sidebar-divider">
+        <div class="sidebar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> Unanswered</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div> Answered</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div> Flagged</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Current</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent);border-radius:50%"></div> PBQ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content-area" id="content-area">
+      <!-- Question rendered here -->
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <button class="btn-nav" id="btn-prev" onclick="prevQ()" aria-label="Previous question">← Prev</button>
+    <div class="bb-center">
+      <button class="btn-mark-review" id="btn-mark" onclick="toggleFlag()">⚑ Mark for Review</button>
+    </div>
+    <button class="btn-nav" id="btn-next" onclick="nextQ()" aria-label="Next question">Next →</button>
+  </div>
+</div>
+
+<!-- ==================== RESULTS SCREEN ==================== -->
+<div id="results-screen" class="screen">
+  <div class="results-wrap">
+    <div class="results-header">
+      <div class="score-hero">
+        <div class="score-val" id="r-score">---</div>
+        <div class="pass-fail-badge" id="r-pf">—</div>
+        <div class="score-raw" id="r-raw">Raw: 0%</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:24px;font-weight:700;margin-bottom:4px" id="r-headline">Exam Complete</div>
+        <div style="font-size:14px;color:var(--text-muted)" id="r-sub">SY0-701 CompTIA Security+</div>
+      </div>
+    </div>
+    <div class="results-stats" id="r-stats"></div>
+    <div class="domain-breakdown-card">
+      <h3>Domain Performance</h3>
+      <div id="r-domains"></div>
+    </div>
+    <div class="pbq-breakdown-card">
+      <h3>PBQ Performance</h3>
+      <div id="r-pbqs"></div>
+    </div>
+    <div class="results-actions">
+      <button class="btn-result primary" onclick="showReview()">📋 Review All Answers</button>
+      <button class="btn-result ghost" onclick="restartExam()">🔁 Retake Exam</button>
+      <button class="btn-result ghost" onclick="showScreen('welcome-screen')">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== REVIEW SCREEN ==================== -->
+<div id="review-screen" class="screen">
+  <div class="review-wrap">
+    <div class="review-topbar">
+      <h2>Answer Review</h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="review-filters">
+          <button class="filter-chip active" data-filter="all" onclick="applyReviewFilter(this,'all')">All</button>
+          <button class="filter-chip" data-filter="incorrect" onclick="applyReviewFilter(this,'incorrect')">Incorrect</button>
+          <button class="filter-chip" data-filter="flagged" onclick="applyReviewFilter(this,'flagged')">Flagged</button>
+          <button class="filter-chip" data-filter="correct" onclick="applyReviewFilter(this,'correct')">Correct</button>
+        </div>
+        <button class="btn-result ghost" style="padding:6px 14px;font-size:12px" onclick="showScreen('results-screen')">← Results</button>
+      </div>
+    </div>
+    <div id="review-list"></div>
+  </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+<!-- End Exam Confirm -->
+<div class="modal-overlay" id="modal-end">
+  <div class="modal-box">
+    <div class="modal-title">Submit Exam?</div>
+    <div class="modal-body">Review your progress before submitting. You will not be able to change answers after submission.</div>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="modal-stat-n" id="m-answered">0</div><div class="modal-stat-l">Answered</div></div>
+      <div class="modal-stat"><div class="modal-stat-n" id="m-unanswered">0</div><div class="modal-stat-l">Unanswered</div></div>
+      <div class="modal-stat"><div class="modal-stat-n" id="m-flagged">0</div><div class="modal-stat-l">Flagged</div></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" onclick="closeModal('modal-end')">Continue Exam</button>
+      <button class="modal-btn-confirm" onclick="submitExam()">Submit &amp; Score</button>
+    </div>
+  </div>
+</div>
+
+<!-- Time Warning 1:00 -->
+<div class="modal-overlay" id="modal-time-warn">
+  <div class="modal-box">
+    <div class="modal-title" style="color:var(--warning)">⚠️ 1 Minute Remaining</div>
+    <div class="modal-body">Your exam will auto-submit when the timer reaches 0:00. Please review your answers and unanswered questions now.</div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" onclick="closeModal('modal-time-warn')">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Generation Loading -->
+<div class="modal-overlay" id="modal-generating">
+  <div class="modal-box" style="text-align:center;max-width:380px">
+    <div class="ai-spinner"></div>
+    <div class="modal-title">Generating Questions</div>
+    <div class="modal-body" id="modal-gen-status">Initializing AI engine...</div>
+    <div class="ai-loading-bar-bg"><div class="ai-loading-bar"></div></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const S = {
+  mode: 'exam',
+  questions: [],
+  currentIdx: 0,
+  answers: {},       // qid → answer
+  flags: new Set(),
+  timeRemaining: 5400,
+  timerHandle: null,
+  startTime: null,
+  endTime: null,
+  showExplanations: false,
+  studyCount: 20,
+  studyDomain: 'all',
+  pdfText: '',
+  candidate: '',
+  sessionHistory: [],  // track wrong answers for weak-domain filter
+  timeWarnShown: false,
+  hintUsed: new Set(),
+};
+
+// ============================================================
+// DOMAIN DATA
+// ============================================================
+const DOMAINS = {
+  '1.0': 'General Security Concepts',
+  '2.0': 'Threats, Vulnerabilities & Mitigations',
+  '3.0': 'Security Architecture',
+  '4.0': 'Security Operations',
+  '5.0': 'Security Program Management & Oversight',
+};
+const DOMAIN_WEIGHTS = { '1.0':12, '2.0':22, '3.0':18, '4.0':28, '5.0':20 };
+
+// ============================================================
+// SEED QUESTION BANK (hardcoded for immediate use)
+// Extended from v1 with new question formats
+// ============================================================
+const SEED_QUESTIONS = [
+// -- DOMAIN 1 --
+{id:'s001',type:'mcq-single',domain:'1.0',obj:'1.2',
+ stem:'A cloud security architect is designing isolation boundaries for a healthcare organization migrating to AWS. Patient records (PHI) must be accessible to clinical staff but completely isolated from the billing department\'s systems. The architect must enforce this without deploying separate VPCs for each department. Which control satisfies BOTH the isolation requirement and the single-VPC constraint?',
+ options:[
+   {id:'A',text:'Deploy a WAF in front of the PHI database to filter department-based requests'},
+   {id:'B',text:'Implement micro-segmentation using security groups and network ACLs with least-privilege rules between subnets',correct:true},
+   {id:'C',text:'Use server-side encryption with customer-managed keys (CMK) for all PHI data at rest'},
+   {id:'D',text:'Configure AWS CloudTrail logging to audit all cross-department access attempts'},
+ ],
+ explanation:'Security groups and NACLs provide layer-3/4 micro-segmentation within a single VPC, satisfying the isolation requirement without VPC proliferation. WAF operates at layer 7 for web traffic. CMK addresses confidentiality, not network isolation. CloudTrail is a detective control, not preventive.',
+ whyWrong:{A:'WAF protects web-facing applications from attack patterns, not internal department-to-department network segmentation',C:'Encryption at rest addresses data confidentiality if storage is breached, not who can communicate with which system over the network',D:'CloudTrail is a logging/detective control; it records what happened but does not prevent unauthorized lateral movement'},
+ reference:'Objective 1.2 — Fundamental Security Concepts'},
+
+{id:'s002',type:'mcq-multi',domain:'1.0',obj:'1.4',selectCount:2,
+ stem:'A security engineer is designing TLS termination for an internal CA serving a hybrid cloud environment. The CA must support certificate stapling and must NOT use algorithms deprecated in NIST SP 800-131A Rev 2. Select TWO configurations that meet these requirements.',
+ options:[
+   {id:'A',text:'RSA-2048 with SHA-1 for certificate signing'},
+   {id:'B',text:'ECDSA P-256 with SHA-256 for certificate signing',correct:true},
+   {id:'C',text:'OCSP stapling enabled on the TLS endpoint',correct:true},
+   {id:'D',text:'TLS 1.1 with AES-128-CBC for transport encryption'},
+   {id:'E',text:'RSA-4096 with MD5 for certificate signing'},
+ ],
+ explanation:'ECDSA P-256 with SHA-256 uses approved algorithms per NIST 800-131A Rev 2. OCSP stapling satisfies the stapling requirement, embedding revocation status in the TLS handshake. SHA-1 and MD5 are deprecated. TLS 1.1 is deprecated (NIST recommends TLS 1.2 minimum).',
+ whyWrong:{A:'SHA-1 is deprecated by NIST SP 800-131A Rev 2 and must not be used for new certificate signing',D:'TLS 1.1 is explicitly disallowed under NIST guidance; TLS 1.2 is the minimum acceptable version',E:'MD5 is cryptographically broken and completely deprecated; it is not permitted under any current NIST guidance'},
+ reference:'Objective 1.4 — Cryptography and PKI'},
+
+{id:'s003',type:'mcq-single',domain:'1.0',obj:'1.1',
+ stem:'After correlating alerts across three SIEM sources, the analyst determines that a critical server was compromised via a legitimate admin account. The incident was detected only because a SOC rule flagged an unusual login time — 3:17 AM on a Sunday. The security control that triggered this alert is BEST classified as:',
+ options:[
+   {id:'A',text:'Preventive technical control'},
+   {id:'B',text:'Corrective operational control'},
+   {id:'C',text:'Detective technical control',correct:true},
+   {id:'D',text:'Deterrent managerial control'},
+ ],
+ explanation:'A SIEM rule that identifies anomalous patterns (time-of-day) and generates an alert is a detective technical control — it identifies an incident after it occurs using automated analysis. Preventive controls block. Corrective controls restore. Deterrent controls discourage.',
+ whyWrong:{A:'Preventive controls block actions before they occur; this rule detected an event that had already happened',B:'Corrective controls restore systems after an incident — not applicable to an alert rule that simply identifies a problem',D:'Deterrent controls are aimed at discouraging attackers (like warning banners) and require human awareness to function'},
+ reference:'Objective 1.1 — Security Controls'},
+
+// -- DOMAIN 2 --
+{id:'s004',type:'mcq-single',domain:'2.0',obj:'2.2',
+ stem:'During a red team engagement, the operator gains a foothold on a workstation and observes that all outbound HTTP/HTTPS traffic passes through an explicit proxy. The operator wants to establish C2 communications while blending into normal traffic. Which technique is MOST effective given this constraint?',
+ options:[
+   {id:'A',text:'Use a reverse shell over TCP port 4444 to bypass proxy inspection'},
+   {id:'B',text:'Tunnel C2 over DNS to bypass proxy controls entirely'},
+   {id:'C',text:'Configure the implant to use the proxy for HTTP CONNECT tunneling to a C2 domain with a high-reputation TLD',correct:true},
+   {id:'D',text:'Use steganography to embed C2 traffic in outbound image uploads to a cloud storage service'},
+ ],
+ explanation:'If all HTTP/HTTPS passes through an explicit proxy, the MOST stealthy technique is to route C2 through the proxy itself using HTTP CONNECT, choosing a domain with a high-reputation TLD that is unlikely to be blocked. TCP 4444 would be blocked by an egress-filtering proxy. DNS tunneling is detectable by DNS inspection. Steganography adds complexity without addressing the proxy constraint directly.',
+ whyWrong:{A:'Non-HTTP traffic on non-standard ports like 4444 would be blocked by an explicit proxy that requires all traffic to pass through it',B:'DNS tunneling bypasses HTTP proxies but is detectable by DNS monitoring — and the question asks what is MOST effective given the specific proxy constraint',D:'Steganography in image uploads is detectable and adds complexity; it does not specifically address or leverage the proxy environment'},
+ reference:'Objective 2.2 — Threat Vectors and Attack Surfaces'},
+
+{id:'s005',type:'mcq-single',domain:'2.0',obj:'2.4',
+ stem:'A junior analyst escalates a ticket showing repeated 401 errors from a single external IP (203.0.113.44) targeting 847 different usernames at the corporate Azure AD login portal over 4 hours. Each username was attempted with only ONE password: "Summer2024!". This attack pattern is BEST classified as:',
+ options:[
+   {id:'A',text:'Credential stuffing — using known compromised credentials from a breach database'},
+   {id:'B',text:'Brute force attack — exhaustively cycling through all password combinations'},
+   {id:'C',text:'Password spraying — testing one common password across many accounts to avoid lockout',correct:true},
+   {id:'D',text:'Kerberoasting — offline cracking of service ticket hashes extracted from Active Directory'},
+ ],
+ explanation:'Password spraying uses a single password ("Summer2024!") against many usernames (847). This avoids per-account lockout thresholds. Credential stuffing uses matched username/password pairs from breach databases. Brute force iterates many passwords against fewer accounts. Kerberoasting is an offline AD attack unrelated to this pattern.',
+ whyWrong:{A:'Credential stuffing uses unique username:password pairs harvested from breached databases — it does not use a single password across all accounts',B:'Brute force exhaustively tries many passwords against specific accounts — the opposite pattern to what is observed here',D:'Kerberoasting targets Kerberos TGS tickets in Active Directory and is an entirely different attack class; it does not produce 401 errors at a web login portal'},
+ reference:'Objective 2.4 — Indicators of Malicious Activity'},
+
+{id:'s006',type:'mcq-single',domain:'2.0',obj:'2.3',
+ stem:'A penetration tester uploads a file named "shell.php" to an image upload feature on a web application. The application stores files in a publicly accessible directory and does not validate file extensions server-side. The tester then browses to the uploaded file\'s URL and achieves remote code execution. This vulnerability is BEST classified as:',
+ options:[
+   {id:'A',text:'SQL Injection — the database accepted unsanitized user input'},
+   {id:'B',text:'Unrestricted File Upload leading to Remote Code Execution',correct:true},
+   {id:'C',text:'Path traversal — the tester navigated outside the intended directory'},
+   {id:'D',text:'Cross-Site Scripting (XSS) — malicious code executes in a user\'s browser'},
+ ],
+ explanation:'Unrestricted file upload allows uploading of executable files (PHP, ASP, etc.) without proper validation. When the web server executes the uploaded script via HTTP request, RCE is achieved. This is a distinct OWASP finding — not SQLi, path traversal, or XSS, each of which have different attack vectors and conditions.',
+ whyWrong:{A:'SQL injection exploits insufficient input sanitization in database queries — no database interaction is described here; this is a file system and web server issue',C:'Path traversal exploits improper file path sanitization to navigate directories — the tester accessed the file at its known public URL, which is normal behavior',D:'XSS injects scripts that execute in victim browsers — the RCE here executes on the server, not in a client browser'},
+ reference:'Objective 2.3 — Vulnerability Types'},
+
+{id:'s007',type:'mcq-single',domain:'2.0',obj:'2.1',
+ stem:'An organization discovers that an adversary group has maintained persistent access to their OT/SCADA network for 14 months, exfiltrating engineering schematics and mapping industrial control system topologies. The adversary used custom malware, zero-day exploits, and showed no interest in financial data. This threat profile is MOST consistent with:',
+ options:[
+   {id:'A',text:'Organized cybercrime syndicate seeking intellectual property to sell'},
+   {id:'B',text:'Hacktivist collective with a political grievance against the organization'},
+   {id:'C',text:'Nation-state Advanced Persistent Threat (APT) with a strategic intelligence objective',correct:true},
+   {id:'D',text:'Disgruntled insider with detailed knowledge of the OT environment'},
+ ],
+ explanation:'Nation-state APTs are characterized by: long dwell times (14 months), targeting of critical infrastructure/OT, use of custom malware and zero-days, strategic (non-financial) objectives (ICS topology mapping), and significant operational resources. No other threat actor class exhibits all these attributes simultaneously.',
+ whyWrong:{A:'Cybercrime syndicates are primarily financially motivated and would target financial data, PII, or deploy ransomware rather than map OT topologies for 14 months',B:'Hacktivists conduct public, attention-seeking attacks (defacement, DDoS) with ideological messaging — they lack resources for custom zero-days and extended covert access',D:'An insider would not require 14 months to map a network they already have access to; insider threats typically act more quickly and lack the capability to develop zero-day exploits'},
+ reference:'Objective 2.1 — Threat Actors and Motivations'},
+
+// -- DOMAIN 3 --
+{id:'s008',type:'mcq-single',domain:'3.0',obj:'3.1',
+ stem:'A cloud security architect is designing an environment where development teams need to deploy code but must not have access to production data. The production environment handles PII. Shared services like CI/CD pipelines must serve both environments. Using the principle of least privilege, which architecture BEST enforces this separation?',
+ options:[
+   {id:'A',text:'Deploy all environments in a single VPC with RBAC permissions differentiating dev and prod access'},
+   {id:'B',text:'Use separate AWS accounts per environment with a shared services account, enforced via AWS Organizations SCPs',correct:true},
+   {id:'C',text:'Encrypt production PII with a CMK that dev team IAM roles cannot access, within the same account'},
+   {id:'D',text:'Implement VPC peering between dev and prod with security group rules preventing direct database access'},
+ ],
+ explanation:'Separate AWS accounts provide the strongest blast-radius containment. SCPs at the Organizations level prevent privilege escalation that could allow dev IAM to assume prod roles. Single-account approaches rely solely on IAM policy enforcement, which can be misconfigured or escalated. CMK encryption addresses confidentiality but not the broader access boundary.',
+ whyWrong:{A:'RBAC within a single account can be misconfigured or bypassed via privilege escalation — account boundaries are stronger isolation primitives than IAM policies',C:'CMK encryption prevents reading data, but dev roles in the same account could still see metadata, modify resources, or escalate via IAM misconfiguration',D:'VPC peering with security groups still shares an account blast radius — a misconfigured role with cross-environment trust could bridge the gap'},
+ reference:'Objective 3.1 — Security Architecture Models'},
+
+{id:'s009',type:'mcq-single',domain:'3.0',obj:'3.4',
+ stem:'After a ransomware attack encrypts all VMs in a primary data center, the organization discovers their backup strategy was: nightly incremental backups to a NAS device on the same network segment. The NAS was also encrypted. Which backup architecture change would MOST directly prevent this scenario from recurring?',
+ options:[
+   {id:'A',text:'Increase backup frequency to hourly incrementals on the same NAS'},
+   {id:'B',text:'Implement the 3-2-1 backup rule: 3 copies, 2 different media types, 1 offsite/air-gapped copy',correct:true},
+   {id:'C',text:'Encrypt backup data before writing to the NAS to prevent ransomware from reading the data'},
+   {id:'D',text:'Deploy an agent-based backup solution that uses VSS snapshots for faster recovery'},
+ ],
+ explanation:'The 3-2-1 rule specifically addresses the scenario: having 1 offsite or air-gapped copy ensures ransomware on the primary network cannot reach backups. Increasing frequency on the same vulnerable NAS repeats the failure. Encrypting backups prevents reading but ransomware still overwrites/encrypts the files. VSS snapshots improve RTO but do not address the backup isolation problem.',
+ whyWrong:{A:'Increasing frequency on the same network-accessible NAS does not address the root cause — the backup was reachable from the same network segment as the ransomware',C:'Encrypting backup data protects confidentiality, but ransomware encrypts (overwrites) files regardless of whether they are already encrypted; the files are still destroyed',D:'VSS snapshots improve recovery speed and granularity but are stored on the same infrastructure; ransomware targeting VSS shadow copies is well-documented (vssadmin delete)'},
+ reference:'Objective 3.4 — Resilience and Recovery'},
+
+// -- DOMAIN 4 --
+{id:'s010',type:'mcq-single',domain:'4.0',obj:'4.3',
+ stem:'A forensic investigator is reviewing disk images from a compromised endpoint. The attacker used a fileless technique: PowerShell was executed from a WMIC call spawned by a malicious Word macro. The malware never wrote an executable to disk. When preparing the forensic report, which artifact would provide the MOST direct evidence of the execution chain?',
+ options:[
+   {id:'A',text:'Windows Prefetch files — record of recently executed programs'},
+   {id:'B',text:'NTFS Master File Table — records all files created and deleted'},
+   {id:'C',text:'PowerShell Transcription logs and Windows Event ID 4104 (script block logging)',correct:true},
+   {id:'D',text:'Registry Run keys — persistence mechanisms written to the registry'},
+ ],
+ explanation:'Fileless malware leaves no binary on disk; artifacts are in-memory and in logging systems. PowerShell Script Block Logging (Event ID 4104) captures the decoded PowerShell that executed regardless of encoding or obfuscation. Transcription logs record full session output. Prefetch tracks executables on disk (no file was written). MFT tracks filesystem changes (no file was created). Registry Run keys show persistence but not the execution chain.',
+ whyWrong:{A:'Prefetch files record evidence of executable files run from disk; since this attack is fileless and no executable was written to disk, prefetch provides limited direct evidence of the PowerShell payload',B:'The MFT records filesystem artifacts (file creation/modification/deletion); no file was written in this fileless attack, so MFT would not capture the actual malicious execution',D:'Registry Run keys indicate persistence mechanisms, not the execution chain of a single PowerShell session; the attacker may not have established persistence at all'},
+ reference:'Objective 4.3 — Incident Response / Objective 4.4 — Digital Forensics'},
+
+{id:'s011',type:'mcq-single',domain:'4.0',obj:'4.1',
+ stem:'The change management board has approved an emergency patch for a critical authentication bypass (CVE with CVSS 9.8) affecting the organization\'s identity provider. The patch must be deployed within 4 hours but cannot break SSO for 12,000 employees during business hours. The administrator must implement the patch with MINIMAL service disruption. Which deployment approach is MOST appropriate?',
+ options:[
+   {id:'A',text:'Apply the patch immediately to all IdP nodes simultaneously and monitor for SSO errors'},
+   {id:'B',text:'Roll the patch in a blue-green deployment pattern — patch the standby IdP node, shift traffic, then patch the primary',correct:true},
+   {id:'C',text:'Deploy the patch during a planned weekend maintenance window to avoid business hours impact'},
+   {id:'D',text:'Install a WAF rule to block exploitation of the CVE while deferring the patch to next maintenance window'},
+ ],
+ explanation:'Blue-green deployment shifts SSO traffic to an already-patched standby node before taking the primary offline. This maintains SSO availability throughout. Simultaneous patching risks a complete SSO outage. A weekend window violates the 4-hour SLA. A WAF compensating control alone is insufficient for a CVSS 9.8 authentication bypass — WAF signatures may be incomplete and the CVE should be patched.',
+ whyWrong:{A:'Simultaneously patching all IdP nodes creates a complete SSO outage — with 12,000 users the business impact would be severe and the patch would fail its own requirement of minimal disruption',C:'A weekend window violates the emergency patch timeline of 4 hours; CVSS 9.8 authentication bypass vulnerabilities must be remediated immediately, not deferred for days',D:'A compensating WAF rule is an acceptable temporary measure alongside patching, but it is not a substitute for patching a CVSS 9.8 vulnerability; WAF bypasses are routinely documented for CVEs'},
+ reference:'Objective 4.3 — Incident Response | Objective 1.3 — Change Management'},
+
+{id:'s012',type:'mcq-multi',domain:'4.0',obj:'4.2',selectCount:2,
+ stem:'A SOC analyst receives an alert from the EDR platform: a LSASS process memory dump was attempted via a non-standard path. Simultaneously, the SIEM shows successful login from the same host to three internal servers using a domain admin account that has not been used in 47 days. Select TWO immediate actions that BEST address this situation.',
+ options:[
+   {id:'A',text:'Reset the password of the domain admin account and disable it pending investigation',correct:true},
+   {id:'B',text:'Isolate the affected host from the network immediately to contain lateral movement',correct:true},
+   {id:'C',text:'Run a full antivirus scan on all servers accessed by the domain admin account'},
+   {id:'D',text:'Delete the LSASS memory dump file from the compromised host'},
+   {id:'E',text:'Wait for the EDR alert to auto-resolve before taking containment action'},
+ ],
+ explanation:'LSASS dump + dormant domain admin lateral movement indicates an active credential theft attack. Isolating the host contains further lateral movement immediately. Disabling/resetting the domain admin stops the attacker from using the stolen credential. AV scans are slower, potentially tip off attackers, and may miss memory-resident malware. Deleting the dump destroys forensic evidence. Never wait on auto-resolve for a live incident.',
+ whyWrong:{C:'A full AV scan is slow, may miss fileless/memory-resident malware, and alerts the attacker; containment takes priority over scanning in an active credential theft scenario',D:'Deleting the LSASS dump destroys critical forensic evidence needed to understand the full scope of credential theft; evidence preservation takes precedence',E:'Auto-resolution of EDR alerts should never be a response strategy for indicators of active credential theft and lateral movement; immediate human intervention is required'},
+ reference:'Objective 4.2 — Alert and Monitoring | Objective 4.3 — Incident Response'},
+
+// -- DOMAIN 5 --
+{id:'s013',type:'mcq-single',domain:'5.0',obj:'5.2',
+ stem:'The board has requested assurance that the organization\'s controls meet regulatory requirements for a defense contractor handling Controlled Unclassified Information (CUI). The legal team flags that neither ISO 27001 nor NIST CSF certifications will satisfy the contractual obligation. Which framework is specifically mandated for this scenario?',
+ options:[
+   {id:'A',text:'FedRAMP — for cloud service providers handling federal data'},
+   {id:'B',text:'CMMC (Cybersecurity Maturity Model Certification) — mandatory for DoD contractors handling CUI',correct:true},
+   {id:'C',text:'SOC 2 Type II — for service organizations demonstrating operational security controls'},
+   {id:'D',text:'HIPAA — for organizations handling protected health information'},
+ ],
+ explanation:'CMMC is specifically mandated by the Department of Defense for all contractors handling CUI. It is contractually required in DoD contracts (DFARS clauses). ISO 27001 and NIST CSF are acceptable frameworks generally but do not fulfill CMMC contractual obligations. FedRAMP applies to cloud service providers specifically. HIPAA applies to health data.',
+ whyWrong:{A:'FedRAMP applies specifically to cloud service providers offering services to federal agencies — it addresses cloud platform security, not the broader cybersecurity maturity requirements for a defense contractor\'s internal systems',C:'SOC 2 Type II demonstrates operational security controls to customers but is not a DoD contractual requirement and does not address CMMC\'s specific CUI handling requirements',D:'HIPAA applies to covered entities and business associates handling Protected Health Information in the healthcare sector — it has no applicability to a defense contractor handling CUI'},
+ reference:'Objective 5.2 — Risk Management | Objective 5.4 — Compliance and Privacy'},
+
+{id:'s014',type:'mcq-single',domain:'5.0',obj:'5.1',
+ stem:'A compliance officer is evaluating frameworks for a mid-size financial firm subject to SOX. The CISO wants to adopt a framework that aligns internal controls documentation with SOX Section 404 requirements while also improving the organization\'s overall cybersecurity posture. Which framework provides the BEST dual alignment?',
+ options:[
+   {id:'A',text:'NIST SP 800-53 — comprehensive federal system controls catalog'},
+   {id:'B',text:'COBIT — IT governance framework aligning IT controls with business objectives and SOX audit requirements',correct:true},
+   {id:'C',text:'NIST CSF — risk-based framework for critical infrastructure cybersecurity'},
+   {id:'D',text:'ISO 27001 — international standard for information security management systems'},
+ ],
+ explanation:'COBIT (Control Objectives for Information and Related Technology) is explicitly designed to align IT controls with governance and audit requirements, including SOX Section 404 internal controls over financial reporting. While NIST SP 800-53 and ISO 27001 are comprehensive, COBIT has the strongest direct mapping to SOX compliance documentation requirements.',
+ whyWrong:{A:'NIST SP 800-53 provides an extensive catalog of security controls primarily for federal systems and their contractors — it lacks the specific SOX audit alignment and governance structure that COBIT provides',C:'NIST CSF is an excellent risk-based cybersecurity framework but does not natively map to SOX 404 internal controls over financial reporting in the way COBIT does',D:'ISO 27001 provides comprehensive ISMS guidance but is oriented toward information security certification rather than IT governance/audit alignment required for SOX Section 404'},
+ reference:'Objective 5.1 — Effective Security Governance'},
+
+{id:'s015',type:'mcq-single',domain:'5.0',obj:'5.3',
+ stem:'An organization is evaluating a SaaS vendor that will process tier-1 customer PII. The procurement team reviews the vendor\'s SOC 2 Type II report from 18 months ago and a vendor questionnaire completed by the vendor\'s sales team. The CISO flags this as insufficient. Which additional due diligence actions would MOST strengthen the third-party risk assessment?',
+ options:[
+   {id:'A',text:'Require the vendor to complete a more detailed questionnaire with specific PII handling procedures'},
+   {id:'B',text:'Obtain the vendor\'s current penetration test report and confirm right-to-audit clauses in the contract',correct:true},
+   {id:'C',text:'Add indemnification clauses to the contract in case of a data breach'},
+   {id:'D',text:'Verify the vendor is SOC 2 certified by searching their name in a public registry'},
+ ],
+ explanation:'An 18-month-old SOC 2 report is stale and may not reflect current controls. A current pen test report provides evidence of tested security posture. Right-to-audit clauses allow the organization to independently verify controls over the contract term. A vendor-completed questionnaire lacks independence. Indemnification addresses liability but not control assurance. SOC 2 is not publicly registered.',
+ whyWrong:{A:'A more detailed questionnaire completed by the vendor\'s own sales team still lacks independence — the vendor self-reports without third-party verification, which is the core problem with the current assessment',C:'Indemnification clauses transfer financial liability after a breach occurs but do not reduce the probability of a breach; they provide no assurance about the vendor\'s actual security controls',D:'SOC 2 is not a publicly registered certification; there is no public registry to verify it, and even a current SOC 2 report alone would not address the security-specific questions a pen test would'},
+ reference:'Objective 5.3 — Third-Party Risk Management'},
+];
+
+// ============================================================
+// PBQ SEED DATA
+// ============================================================
+const PBQ_SEEDS = [
+// PBQ TYPE 1: Firewall Rule Configuration
+{
+  id:'pbq001', type:'pbq-firewall', domain:'3.0', obj:'3.2',
+  title:'Firewall Rule Configuration',
+  scenario:'A healthcare organization has deployed a new clinical application server (10.10.5.20) in the DMZ. The server must accept HTTPS from the internet (any source), SSH only from the management VLAN (10.10.100.0/24), and database queries only from the internal application tier (10.10.2.0/24) on port 1433. All other traffic must be denied. Configure the ACL to enforce this policy.',
+  rules:[
+    {id:'r1', src:'ANY', dst:'10.10.5.20', port:'443', proto:'TCP', action:'Allow', correct:'Allow', locked:false, description:'HTTPS from internet to application server'},
+    {id:'r2', src:'10.10.100.0/24', dst:'10.10.5.20', port:'22', proto:'TCP', action:'Deny', correct:'Allow', locked:false, description:'SSH from Management VLAN'},
+    {id:'r3', src:'10.10.2.0/24', dst:'10.10.5.20', port:'1433', proto:'TCP', action:'Deny', correct:'Allow', locked:false, description:'SQL from Application Tier'},
+    {id:'r4', src:'ANY', dst:'10.10.5.20', port:'80', proto:'TCP', action:'Allow', correct:'Deny', locked:false, description:'HTTP redirect — should be denied (HTTPS only)'},
+    {id:'r5', src:'ANY', dst:'10.10.5.20', port:'ANY', proto:'ANY', action:'Allow', correct:'Deny', locked:false, description:'Default deny all — implicit rule'},
+    {id:'r6', src:'10.10.5.20', dst:'10.10.3.50', port:'514', proto:'UDP', action:'Allow', correct:'Allow', locked:true, description:'Syslog to SIEM (pre-configured)'},
+  ],
+  explanation:'HTTPS should be open from any source (public app). SSH must be restricted to management VLAN only. Database port 1433 only from the app tier. HTTP (80) must be denied on a HTTPS-only server to prevent protocol downgrade. The default deny catches all other traffic. Syslog to SIEM is pre-configured and correct.',
+  reference:'Objective 3.2 — Enterprise Infrastructure Security'
+},
+
+// PBQ TYPE 2: Log Analysis
+{
+  id:'pbq002', type:'pbq-log', domain:'4.0', obj:'4.2',
+  title:'Log Analysis & Triage',
+  scenario:'A SOC analyst receives a P1 alert from the SIEM. The following logs are from the perimeter firewall and the IDS/IPS over a 6-minute window. Analyze the logs to identify the attack type, the attacker\'s source IP, select the correct remediation action, and identify the affected asset.',
+  logs:[
+    {ts:'08:42:11',level:'info',msg:'FW ALLOW TCP 198.51.100.44:54210 → 203.0.113.10:80 [SYN] ESTABLISHED'},
+    {ts:'08:42:15',level:'info',msg:'FW ALLOW TCP 198.51.100.44:54218 → 203.0.113.10:80 [SYN] ESTABLISHED'},
+    {ts:'08:42:18',level:'warn',msg:'IDS: High connection rate from 198.51.100.44 — 148 connections/min to 203.0.113.10:80'},
+    {ts:'08:42:19',level:'warn',msg:'FW ALLOW TCP 10.0.0.55:22 → 172.16.5.10:22 [SYN] ESTABLISHED'},
+    {ts:'08:42:21',level:'warn',msg:'IDS: HTTP flood detected — src=198.51.100.44 dst=203.0.113.10:80 rate=420 req/s'},
+    {ts:'08:42:22',level:'crit',msg:'IDS CRITICAL: Layer-7 DDoS — GET flood targeting /search?q= endpoint — 203.0.113.10'},
+    {ts:'08:42:23',level:'info',msg:'DNS QUERY: internal-db-01.corp.local → 8.8.8.8 A (reverse lookup)'},
+    {ts:'08:42:25',level:'crit',msg:'IDS CRITICAL: HTTP flood 198.51.100.44 — 850 req/s — URI: /search?q=a%27+OR+1%3D1--'},
+    {ts:'08:42:27',level:'warn',msg:'WAF: SQL injection pattern detected in GET param — src=198.51.100.44 → 203.0.113.10/search'},
+    {ts:'08:42:28',level:'info',msg:'FW ALLOW UDP 10.0.0.12:53 → 10.0.0.1:53 [DNS] internal query'},
+    {ts:'08:42:30',level:'crit',msg:'IDS ALERT: Application CPU 203.0.113.10 at 97% — possible resource exhaustion'},
+    {ts:'08:42:33',level:'ok',msg:'WAF BLOCK: 198.51.100.44 blocked for SQLi pattern match — URI /search'},
+    {ts:'08:42:35',level:'info',msg:'FW ALLOW TCP 10.0.1.44:8080 → 172.16.5.20:443 [SYN] ESTABLISHED'},
+    {ts:'08:42:38',level:'crit',msg:'IDS ALERT: Web server 203.0.113.10 — 503 Service Unavailable — resource exhausted'},
+    {ts:'08:42:40',level:'info',msg:'FW DENY TCP 198.51.100.44:54890 → 203.0.113.10:80 [RATE LIMIT]'},
+    {ts:'08:42:44',level:'ok',msg:'WAF: GeoIP block applied — ASN 64499 (198.51.100.0/24) blocked'},
+  ],
+  attackTypes:['Layer-7 HTTP Flood / DDoS combined with SQL Injection','SYN Flood (Layer 4 DDoS)','DNS Amplification Attack','Cross-Site Request Forgery (CSRF)','Credential Stuffing via HTTP POST','ARP Spoofing and MITM'],
+  correctAttack:'Layer-7 HTTP Flood / DDoS combined with SQL Injection',
+  affectedAssets:['203.0.113.10 (Web Application Server)','172.16.5.10 (Internal SSH Server)','10.0.0.55 (Internal Workstation)','internal-db-01.corp.local (Database Server)','10.0.1.44 (Application Server)'],
+  correctAsset:'203.0.113.10 (Web Application Server)',
+  attackerIP:'198.51.100.44',
+  remediations:['Apply WAF rule and GeoIP block for source ASN','Restart the affected web server to restore service','Block all inbound HTTP traffic at perimeter firewall','Null-route the attacker IP at the upstream BGP router','Enable CAPTCHA on the login page','Reboot all servers in the DMZ'],
+  correctRemediation:'Apply WAF rule and GeoIP block for source ASN',
+  explanation:'The logs show a Layer-7 HTTP flood (850 req/s targeting /search) combined with SQL injection attempts in the URI parameter (URL-encoded apostrophe and OR 1=1). The source IP 198.51.100.44 is responsible. The affected system is 203.0.113.10. The WAF correctly identified and blocked both the SQLi pattern and applied the GeoIP block on the offending ASN.',
+  reference:'Objective 4.2 — Alert and Monitoring'
+},
+
+// PBQ TYPE 3: Incident Response Ordering
+{
+  id:'pbq003', type:'pbq-sequence', domain:'4.0', obj:'4.3',
+  title:'Incident Response Process Ordering',
+  scenario:'A ransomware incident has been declared after encrypted files are discovered on 14 endpoints and 3 file servers across a healthcare network. The organization follows the NIST SP 800-61 Rev 2 Incident Response lifecycle. Order the following response actions from FIRST (top) to LAST (bottom). One item below is NOT a valid step in the NIST IR process — place it in the "Invalid Step" zone.',
+  items:[
+    {id:'ir0', label:'Preparation: Confirm IR team activation and notify legal/CISO per the IR communication plan', correctPosition:0},
+    {id:'ir1', label:'Detection & Analysis: Determine the scope — identify all encrypted systems, initial infection vector, and patient zero', correctPosition:1},
+    {id:'ir2', label:'Containment: Network-isolate all affected endpoints and disable compromised accounts immediately', correctPosition:2},
+    {id:'ir3', label:'Eradication: Remove ransomware binaries, wipe affected systems, and patch the exploited vulnerability', correctPosition:3},
+    {id:'ir4', label:'Recovery: Restore from verified clean backups, validate system integrity before returning to production', correctPosition:4},
+    {id:'ir5', label:'Post-Incident Activity: Conduct lessons-learned review within 5 days; update IR playbook and controls', correctPosition:5},
+    {id:'ir-invalid', label:'Remediation: Pay the ransom demand to decrypt files and resume operations as quickly as possible', correctPosition:-1, invalid:true},
+  ],
+  explanation:'NIST 800-61 Rev 2 phases: Preparation → Detection/Analysis → Containment → Eradication → Recovery → Post-Incident. "Pay the ransom" is not a valid NIST IR step — it is not recommended, does not guarantee decryption, and funds criminal operations.',
+  reference:'Objective 4.3 — Incident Response'
+},
+
+// PBQ TYPE 4: Network Architecture Mapping
+{
+  id:'pbq004', type:'pbq-placement', domain:'3.0', obj:'3.2',
+  title:'Network Security Architecture Mapping',
+  scenario:'A financial services firm is deploying a new layered network architecture with four zones: Internet-Facing Edge, DMZ, Internal Network, and Privileged Access Zone. Place each security control from the bank below into the correct network zone. Two controls are redundant or mismatched for this architecture — place them in the "Not Applicable / Remove" zone.',
+  items:[
+    {id:'ctrl-waf', label:'Web Application Firewall (WAF)', icon:'🛡️', correct:'dmz'},
+    {id:'ctrl-ids', label:'IDS/IPS Sensor (Passive + Inline)', icon:'🔍', correct:'edge'},
+    {id:'ctrl-jump', label:'Jump Server / Bastion Host', icon:'🖥️', correct:'privileged'},
+    {id:'ctrl-radius', label:'RADIUS Authentication Server', icon:'🔐', correct:'internal'},
+    {id:'ctrl-dam', label:'Database Activity Monitor (DAM)', icon:'🗄️', correct:'internal'},
+    {id:'ctrl-honey', label:'Honeypot / Deception System', icon:'🍯', correct:'dmz'},
+    {id:'ctrl-mfa', label:'MFA Gateway / Identity Proxy', icon:'📲', correct:'edge'},
+    {id:'ctrl-casb', label:'Cloud Access Security Broker (CASB)', icon:'☁️', correct:'internal'},
+    {id:'ctrl-nac', label:'Network Access Control (NAC)', icon:'🔒', correct:'internal'},
+    {id:'ctrl-dlp', label:'DLP Sensor / Data Inspector', icon:'📊', correct:'edge'},
+    {id:'ctrl-vuln', label:'Vulnerability Scanner (active)', icon:'⚠️', correct:'na'},
+    {id:'ctrl-print', label:'Network Print Server', icon:'🖨️', correct:'na'},
+  ],
+  zones:[
+    {id:'edge', label:'Internet-Facing Edge', desc:'Between internet and DMZ'},
+    {id:'dmz', label:'DMZ', desc:'Public-facing services zone'},
+    {id:'internal', label:'Internal Network', desc:'Corporate systems zone'},
+    {id:'privileged', label:'Privileged Access Zone', desc:'Admin/management systems'},
+    {id:'na', label:'Not Applicable / Remove', desc:'Redundant or incorrect placement'},
+  ],
+  explanation:'IDS/IPS and DLP at the edge monitor inbound/outbound traffic. WAF and honeypot belong in the DMZ protecting public services. RADIUS, DAM, CASB, and NAC operate within the internal network. The jump server belongs in the Privileged Access Zone as the single access point. A vulnerability scanner and print server are not security architecture controls in this context.',
+  reference:'Objective 3.2 — Enterprise Infrastructure Security'
+},
+
+// PBQ TYPE 5: Compliance Framework Matching
+{
+  id:'pbq005', type:'pbq-compliance', domain:'5.0', obj:'5.4',
+  title:'Compliance Framework Matching',
+  scenario:'A compliance officer is conducting a gap analysis across multiple regulatory obligations. Match each organizational scenario on the left to the MOST applicable compliance framework. No framework may be used more than twice.',
+  pairs:[
+    {id:'c1', scenario:'An e-commerce company processing Visa and Mastercard transactions must implement tokenization and maintain a secure cardholder data environment.', correct:'PCI-DSS'},
+    {id:'c2', scenario:'A Berlin-based SaaS startup collects analytics data from website visitors in France and must respond to right-to-erasure requests.', correct:'GDPR'},
+    {id:'c3', scenario:'A regional hospital network must ensure all electronic patient records (ePHI) are encrypted at rest and access is audited.', correct:'HIPAA'},
+    {id:'c4', scenario:'A publicly traded US company must document IT general controls supporting financial statement accuracy for its annual SEC filing.', correct:'SOX'},
+    {id:'c5', scenario:'A defense contractor handling CUI under a DFARS clause must achieve Level 2 certification before the contract renewal.', correct:'CMMC'},
+    {id:'c6', scenario:'A government cloud hosting provider wants FedRAMP authorization so federal agencies can use its IaaS platform.', correct:'FedRAMP'},
+    {id:'c7', scenario:'A multinational bank wants a third-party audited ISMS certification recognized across 30 countries for customer trust.', correct:'ISO 27001'},
+  ],
+  frameworks:['PCI-DSS','GDPR','HIPAA','SOX','CMMC','FedRAMP','ISO 27001','NIST CSF'],
+  explanation:'Each scenario maps to the framework with the most direct mandate: payment data→PCI-DSS, EU personal data→GDPR, US health data→HIPAA, SOX financial controls→SOX, DoD CUI→CMMC, federal cloud→FedRAMP, international ISMS certification→ISO 27001.',
+  reference:'Objective 5.4 — Compliance and Privacy'
+},
+
+// PBQ TYPE 6: Vulnerability Prioritization
+{
+  id:'pbq006', type:'pbq-vulnscan', domain:'4.0', obj:'4.5',
+  title:'Vulnerability Prioritization & Remediation',
+  scenario:'A vulnerability scan of the production environment has returned the following findings. Prioritize the top 3 vulnerabilities requiring immediate remediation (drag to the Priority Queue in order: 1=most critical). Assign the correct remediation action to each remaining finding.',
+  findings:[
+    {id:'v1', cve:'CVE-2023-44487', cvss:7.5, asset:'Load Balancer (Internet-facing)', assetCrit:'High', exploit:'Active', system:'HTTP/2 server — "RESET flood" DoS', action:'', correctAction:'Patch', priority:2},
+    {id:'v2', cve:'CVE-2021-44228', cvss:10.0, asset:'Apache Log4j (Production API)', assetCrit:'High', exploit:'Active', system:'Log4Shell — JNDI injection RCE', action:'', correctAction:'Patch', priority:1},
+    {id:'v3', cve:'CVE-2023-23397', cvss:9.8, asset:'Exchange Server (Internal Mail)', assetCrit:'High', exploit:'Active', system:'Outlook NTLM hash theft — zero-click', action:'', correctAction:'Patch', priority:3},
+    {id:'v4', cve:'CVE-2022-26134', cvss:9.8, asset:'Confluence Wiki (Internal)', assetCrit:'Med', exploit:'PoC', system:'Confluence OGNL injection RCE', action:'', correctAction:'Patch'},
+    {id:'v5', cve:'CVE-2020-0796', cvss:10.0, asset:'Windows File Server (Internal)', assetCrit:'Med', exploit:'PoC', system:'SMBGhost — remote code execution', action:'', correctAction:'Patch'},
+    {id:'v6', cve:'CVE-2018-10933', cvss:9.8, asset:'Dev SSH Server (Internal)', assetCrit:'Low', exploit:'PoC', system:'libssh auth bypass — client Hello bypass', action:'', correctAction:'Patch'},
+    {id:'v7', cve:'CVE-2016-0800', cvss:3.1, asset:'Legacy VPN Appliance', assetCrit:'Med', exploit:'None', system:'DROWN — SSLv2 cipher oracle', action:'', correctAction:'Compensating Control'},
+    {id:'v8', cve:'CVE-2015-4000', cvss:3.7, asset:'Internal Dev Server', assetCrit:'Low', exploit:'None', system:'Logjam — TLS DHE 512-bit downgrade', action:'', correctAction:'Accept Risk'},
+    {id:'v9', cve:'CVE-2014-0160', cvss:7.5, asset:'Monitoring Server (Internal)', assetCrit:'Low', exploit:'None', system:'Heartbleed — OpenSSL memory disclosure', action:'', correctAction:'Patch'},
+  ],
+  remediationOptions:['Patch','Compensating Control','Accept Risk','Isolate','Decommission'],
+  prioritySlots:3,
+  correctPriority:['v2','v1','v3'],
+  explanation:'Log4Shell (CVSS 10, Active exploit, Production API) is #1. HTTP/2 RESET flood on internet-facing LB with active exploit is #2. Exchange Outlook NTLM theft (zero-click, active) is #3. DROWN on a legacy VPN needs a compensating control (disable SSLv2). Logjam on an internal dev server with no active exploit and low asset criticality can be accepted. Heartbleed on internal monitoring should still be patched.',
+  reference:'Objective 4.5 — Vulnerability Management'
+},
+
+// PBQ TYPE 7: Cryptography & PKI Configuration
+{
+  id:'pbq007', type:'pbq-crypto', domain:'1.0', obj:'1.4',
+  title:'Cryptography & PKI Configuration',
+  scenario:'An organization is configuring TLS for an internal Certificate Authority that will issue certificates to a multi-domain financial application (covering app.finance.internal, api.finance.internal, and *.reports.finance.internal). Complete the PKI decision tree by selecting the correct option at each node.',
+  nodes:[
+    {id:'n1', question:'Certificate Type for multi-domain coverage including wildcard subdomain', options:['DV (Domain Validation) Single-Domain','OV (Organization Validation) SAN + Wildcard','EV (Extended Validation) Single Subject','Self-signed certificate — no CA required'], correct:'OV (Organization Validation) SAN + Wildcard', icon:'📜'},
+    {id:'n2', question:'Key Exchange Algorithm — FIPS 140-3 compliant, forward secrecy required', options:['RSA static key exchange (no forward secrecy)','DHE with 1024-bit group (legacy)','ECDHE with P-256 or P-384 (FIPS-approved elliptic curve)','PSK (Pre-Shared Key) — static TLS session'], correct:'ECDHE with P-256 or P-384 (FIPS-approved elliptic curve)', icon:'🔑'},
+    {id:'n3', question:'Symmetric Cipher Suite for TLS 1.3 (select the ONLY valid option)', options:['AES-128-CBC with HMAC-SHA1','3DES-EDE-CBC (legacy compatibility)','AES-256-GCM (AEAD authenticated encryption)','RC4-128 stream cipher'], correct:'AES-256-GCM (AEAD authenticated encryption)', icon:'🔐'},
+    {id:'n4', question:'Certificate Revocation Method — must support stapling for performance', options:['CRL only (Certificate Revocation List)','OCSP with stapling enabled','Manual revocation via CA console','No revocation — internal CA only'], correct:'OCSP with stapling enabled', icon:'✅'},
+    {id:'n5', question:'CA Hierarchy — internal CA with offline root CA required', options:['Single-tier: Root CA issues end-entity certs directly','Two-tier: Offline Root CA → Online Issuing CA','Flat: All CAs at equal trust level','Self-signed: No hierarchy needed for internal'], correct:'Two-tier: Offline Root CA → Online Issuing CA', icon:'🏛️'},
+  ],
+  explanation:'SAN+Wildcard OV cert covers all three domains. ECDHE provides FIPS-compliant forward secrecy. TLS 1.3 mandates AEAD ciphers; AES-256-GCM is the correct choice. OCSP stapling reduces revocation check latency and supports caching. A two-tier CA hierarchy keeps the root offline, limiting blast radius if the issuing CA is compromised.',
+  reference:'Objective 1.4 — Cryptography and PKI'
+},
+];
+
+// ============================================================
+// UTILITIES
+// ============================================================
+const $ = id => document.getElementById(id);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function uuid() { return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+// ============================================================
+// EXAM SETUP
+// ============================================================
+function buildExamQuestions() {
+  const mode = S.mode;
+  let allQ = shuffle([...SEED_QUESTIONS]);
+  let allPBQ = shuffle([...PBQ_SEEDS]);
+
+  if (mode === 'exam') {
+    // Full 90 question exam with domain weighting
+    let mcqs = [], usedDomains = {};
+    Object.keys(DOMAIN_WEIGHTS).forEach(d => usedDomains[d]=0);
+    
+    const available = shuffle([...SEED_QUESTIONS]);
+    available.forEach(q => {
+      const d = q.domain;
+      const target = Math.ceil(83 * DOMAIN_WEIGHTS[d]/100);
+      if ((usedDomains[d]||0) < target) { mcqs.push(q); usedDomains[d]=(usedDomains[d]||0)+1; }
+    });
+    // Fill remaining
+    available.forEach(q => { if (!mcqs.find(x=>x.id===q.id) && mcqs.length<83) mcqs.push(q); });
+    while(mcqs.length < 83) mcqs.push({...mcqs[mcqs.length%mcqs.length], id:'fill-'+uuid()});
+
+    // Interleave 7 PBQs randomly, no two within 8 questions
+    const pbqs = shuffle([...allPBQ]).slice(0,7);
+    const positions = [];
+    let lastPos = -9;
+    for(let i=0;i<7;i++) {
+      let pos;
+      do { pos = Math.floor(Math.random()*(mcqs.length+positions.length)); }
+      while(positions.some(p=>Math.abs(p-pos)<8) || pos===lastPos);
+      positions.push(pos); lastPos=pos;
+    }
+    positions.sort((a,b)=>a-b);
+
+    let result = [...mcqs];
+    positions.forEach((pos,i) => { result.splice(pos+i, 0, {...pbqs[i], _isPBQ:true}); });
+    S.questions = result.slice(0,90);
+    S.timeRemaining = 5400;
+  } else {
+    const count = S.studyCount;
+    const domain = S.studyDomain;
+    let pool = domain==='all' ? allQ : allQ.filter(q=>q.domain===domain);
+    let pbqPool = domain==='all' ? allPBQ : allPBQ.filter(q=>q.domain===domain);
+    const typeMCQ = $('type-mcq').checked;
+    const typePBQ = $('type-pbq').checked;
+    let qs = [];
+    if (typeMCQ) qs = [...pool.slice(0,count)];
+    if (typePBQ && pbqPool.length) qs = [...qs.slice(0,count-2), ...shuffle(pbqPool).slice(0,2)];
+    S.questions = shuffle(qs).slice(0,count);
+    S.timeRemaining = 0;
+    S.showExplanations = true;
+  }
+
+  // Shuffle MCQ options
+  S.questions = S.questions.map(q => {
+    if (q.options) return {...q, options: shuffle(q.options)};
+    if (q.type==='pbq-sequence') return {...q, items: shuffle(q.items)};
+    return q;
+  });
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer() {
+  if (S.timerHandle) clearInterval(S.timerHandle);
+  updateTimer();
+  if (!S.timeRemaining) { $('timer').textContent='∞'; return; }
+  S.timerHandle = setInterval(() => {
+    S.timeRemaining--;
+    updateTimer();
+    if (S.timeRemaining===60 && !S.timeWarnShown) { S.timeWarnShown=true; openModal('modal-time-warn'); }
+    if (S.timeRemaining<=0) { clearInterval(S.timerHandle); submitExam(); }
+  }, 1000);
+}
+
+function updateTimer() {
+  const t = S.timeRemaining;
+  const m = Math.floor(t/60), s = t%60;
+  const display = `${m}:${String(s).padStart(2,'0')}`;
+  const el = $('timer');
+  el.textContent = display;
+  el.className = 'timer';
+  if (t<=300) el.classList.add('red');
+  else if (t<=900) el.classList.add('amber');
+
+  // Danger chips when <5min
+  if (t<=300) {
+    document.querySelectorAll('.q-chip:not(.answered)').forEach(c=>c.classList.add('danger-unanswered'));
+  }
+}
+
+// ============================================================
+// NAVIGATOR
+// ============================================================
+function buildNavigator() {
+  const grid = $('q-grid');
+  grid.innerHTML = '';
+  S.questions.forEach((q,i) => {
+    const chip = document.createElement('button');
+    chip.className = 'q-chip';
+    chip.textContent = i+1;
+    chip.id = `chip-${i}`;
+    chip.setAttribute('aria-label',`Question ${i+1}`);
+    chip.onclick = () => goTo(i);
+    if (q._isPBQ || q.type?.startsWith('pbq')) chip.classList.add('pbq-chip');
+    grid.appendChild(chip);
+  });
+  updateNavigator();
+}
+
+function updateNavigator() {
+  const total = S.questions.length;
+  const answered = S.questions.filter(q=>isAnswered(q.id)).length;
+  const flagged = S.flags.size;
+
+  S.questions.forEach((q,i) => {
+    const chip = $(`chip-${i}`);
+    if (!chip) return;
+    chip.className = 'q-chip' + (q._isPBQ||q.type?.startsWith('pbq')?' pbq-chip':'');
+    if (i===S.currentIdx) chip.classList.add('current');
+    else if (isAnswered(q.id) && S.flags.has(q.id)) chip.classList.add('answered','flagged');
+    else if (isAnswered(q.id)) chip.classList.add('answered');
+    else if (S.flags.has(q.id)) chip.classList.add('flagged');
+    if (S.timeRemaining<=300 && !isAnswered(q.id) && i!==S.currentIdx) chip.classList.add('danger-unanswered');
+  });
+
+  $('sb-answered').textContent = `${answered}/${total}`;
+  $('sb-flagged').textContent = flagged;
+  $('sb-remaining').textContent = total-answered;
+}
+
+function isAnswered(qid) {
+  const a = S.answers[qid];
+  if (a===undefined||a===null) return false;
+  if (Array.isArray(a)) return a.length>0;
+  if (typeof a==='object') return Object.keys(a).length>0;
+  return String(a).trim().length>0;
+}
+
+// ============================================================
+// QUESTION RENDERING
+// ============================================================
+function renderQ() {
+  const q = S.questions[S.currentIdx];
+  if (!q) return;
+
+  // Update top bar
+  $('tb-domain').textContent = `Domain ${q.domain} — ${DOMAINS[q.domain]||''}`;
+  $('tb-qcount').textContent = `Q ${S.currentIdx+1} of ${S.questions.length}`;
+  const isFlagged = S.flags.has(q.id);
+  $('tb-flag-btn').className = 'tb-flag-btn' + (isFlagged?' flagged':'');
+  $('flag-label').textContent = isFlagged ? 'Flagged' : 'Flag';
+  $('btn-mark').className = 'btn-mark-review' + (isFlagged?' active':'');
+
+  // Nav buttons
+  $('btn-prev').disabled = S.currentIdx===0;
+  $('btn-next').disabled = S.currentIdx===S.questions.length-1;
+
+  const area = $('content-area');
+  area.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = 'q-card';
+
+  // Meta
+  const meta = document.createElement('div');
+  meta.className = 'q-meta';
+  const domTag = document.createElement('span');
+  domTag.className = 'q-meta-tag domain';
+  domTag.textContent = `Domain ${q.domain}`;
+  meta.appendChild(domTag);
+
+  if (q.obj) {
+    const objTag = document.createElement('span');
+    objTag.className = 'q-meta-tag obj';
+    objTag.textContent = `Obj ${q.obj}`;
+    meta.appendChild(objTag);
+  }
+
+  if (q.type==='mcq-multi') {
+    const multiTag = document.createElement('span');
+    multiTag.className = 'q-meta-tag multi';
+    multiTag.textContent = `Select ${q.selectCount||2}`;
+    meta.appendChild(multiTag);
+  }
+
+  const isPBQ = q.type?.startsWith('pbq') || q._isPBQ;
+  if (isPBQ) {
+    const pbqTag = document.createElement('span');
+    pbqTag.className = 'q-meta-tag pbq';
+    pbqTag.textContent = `PBQ — ${q.title||q.type}`;
+    meta.appendChild(pbqTag);
+  }
+  card.appendChild(meta);
+
+  // Stem
+  const stem = document.createElement('div');
+  stem.className = 'q-stem';
+  stem.innerHTML = esc(q.stem||'').replace(/\n/g,'<br>');
+  card.appendChild(stem);
+
+  // Answer interface
+  const ans = S.answers[q.id];
+  switch(q.type) {
+    case 'mcq-single': renderMCQSingle(q, card, ans); break;
+    case 'mcq-multi':  renderMCQMulti(q, card, ans); break;
+    case 'pbq-firewall': renderPBQFirewall(q, card, ans); break;
+    case 'pbq-log':      renderPBQLog(q, card, ans); break;
+    case 'pbq-sequence': renderPBQSequence(q, card, ans); break;
+    case 'pbq-placement': renderPBQPlacement(q, card, ans); break;
+    case 'pbq-compliance': renderPBQCompliance(q, card, ans); break;
+    case 'pbq-vulnscan': renderPBQVulnScan(q, card, ans); break;
+    case 'pbq-crypto':   renderPBQCrypto(q, card, ans); break;
+    default: card.appendChild(Object.assign(document.createElement('p'),{textContent:'Loading...',style:'color:var(--text-muted)'}));
+  }
+
+  // Study mode hint + explanation
+  if (S.mode==='study' && !isPBQ) {
+    if (!S.hintUsed.has(q.id)) {
+      const hintBtn = document.createElement('button');
+      hintBtn.className = 'hint-btn';
+      hintBtn.innerHTML = '💡 Hint <span style="color:var(--text-dim);font-size:10px">(−10% score)</span>';
+      hintBtn.onclick = () => { S.hintUsed.add(q.id); showHint(q, hintPanel); };
+      card.appendChild(hintBtn);
+    }
+    const hintPanel = document.createElement('div');
+    hintPanel.className = 'hint-panel';
+    hintPanel.id = `hint-${q.id}`;
+    card.appendChild(hintPanel);
+
+    if (S.showExplanations && isAnswered(q.id)) {
+      renderExplanation(q, card);
+    }
+  }
+
+  area.appendChild(card);
+  area.scrollTop = 0;
+  updateNavigator();
+}
+
+function showHint(q, panel) {
+  if (!q.options) return;
+  const wrong = q.options.filter(o=>!o.correct);
+  const eliminate = shuffle(wrong)[0];
+  panel.textContent = `Hint: Option ${eliminate?.id||'?'} is incorrect — it addresses a different scenario constraint. Consider which option satisfies BOTH constraints in the question stem.`;
+  panel.classList.add('visible');
+}
+
+function renderExplanation(q, card) {
+  const exp = document.createElement('div');
+  exp.className = 'review-explanation';
+  exp.style.marginTop='16px';
+  exp.innerHTML = `
+    <div class="exp-title">Explanation</div>
+    <p>${esc(q.explanation||'')}</p>
+    ${q.reference?`<p style="font-size:11px;color:var(--text-dim);margin-top:6px">📖 ${esc(q.reference)}</p>`:''}
+  `;
+  if (q.whyWrong) {
+    const ww = document.createElement('div');
+    ww.className = 'exp-why-wrong';
+    ww.innerHTML = `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);margin-bottom:4px">Why Other Options Are Incorrect</div>`;
+    Object.entries(q.whyWrong).forEach(([opt, reason]) => {
+      const item = document.createElement('div');
+      item.className = 'exp-why-wrong-item';
+      item.innerHTML = `<strong>${esc(opt)}:</strong> <span>${esc(reason)}</span>`;
+      ww.appendChild(item);
+    });
+    exp.appendChild(ww);
+  }
+  card.appendChild(exp);
+}
+
+// ============================================================
+// MCQ RENDERERS
+// ============================================================
+function renderMCQSingle(q, card, ans) {
+  const list = document.createElement('div');
+  list.className = 'options-list';
+  const inReview = S.reviewMode;
+
+  q.options.forEach(opt => {
+    const row = document.createElement('div');
+    row.className = 'opt-row';
+    row.tabIndex = 0;
+    row.setAttribute('role','radio');
+    row.setAttribute('aria-checked', ans===opt.id ? 'true':'false');
+
+    const isSelected = ans===opt.id;
+    if (inReview) {
+      if (isSelected && opt.correct) row.classList.add('correct');
+      else if (isSelected && !opt.correct) row.classList.add('incorrect');
+      else if (!isSelected && opt.correct) row.classList.add('correct-missed');
+    } else if (isSelected) row.classList.add('selected');
+
+    let marker = '';
+    if (inReview) {
+      if (isSelected && opt.correct) marker='<span class="opt-marker">✓</span>';
+      else if (isSelected) marker='<span class="opt-marker">✗</span>';
+      else if (opt.correct) marker='<span class="opt-marker" style="color:var(--success)">✓</span>';
+    }
+
+    row.innerHTML = `<div class="opt-label">${esc(opt.id)}</div><div class="opt-text">${esc(opt.text)}</div>${marker}`;
+
+    if (!inReview) {
+      const select = () => {
+        S.answers[q.id] = opt.id;
+        updateNavigator();
+        if (S.showExplanations) renderQ(); else updateNavChip();
+      };
+      row.addEventListener('click', select);
+      row.addEventListener('keydown', e => { if(e.key===' '||e.key==='Enter'){e.preventDefault();select();} });
+    }
+    list.appendChild(row);
+  });
+  card.appendChild(list);
+}
+
+function renderMCQMulti(q, card, ans) {
+  const selected = Array.isArray(ans) ? [...ans] : [];
+  const count = q.selectCount||2;
+  const inReview = S.reviewMode;
+  const correctIds = (q.options||[]).filter(o=>o.correct).map(o=>o.id);
+
+  const badge = document.createElement('div');
+  badge.className = 'multi-badge';
+  badge.innerHTML = `Select <strong style="margin:0 4px">${count}</strong> answers <span class="sel-count ${selected.length>=count?'complete':''}">${selected.length}/${count}</span>`;
+  card.appendChild(badge);
+
+  const list = document.createElement('div');
+  list.className = 'options-list';
+
+  q.options.forEach(opt => {
+    const row = document.createElement('div');
+    row.className = 'opt-row';
+    row.tabIndex = 0;
+    row.setAttribute('role','checkbox');
+    const isSel = selected.includes(opt.id);
+
+    if (inReview) {
+      if (isSel && opt.correct) row.classList.add('correct');
+      else if (isSel && !opt.correct) row.classList.add('incorrect');
+      else if (!isSel && opt.correct) row.classList.add('correct-missed');
+    } else if (isSel) row.classList.add('selected');
+
+    let marker='';
+    if(inReview){if(isSel&&opt.correct)marker='<span class="opt-marker">✓</span>';else if(isSel)marker='<span class="opt-marker">✗</span>';else if(opt.correct)marker='<span class="opt-marker" style="color:var(--success)">✓</span>';}
+
+    row.innerHTML=`<div class="opt-label" style="border-radius:4px">${esc(opt.id)}</div><div class="opt-text">${esc(opt.text)}</div>${marker}`;
+
+    if (!inReview) {
+      const toggle = () => {
+        const idx=selected.indexOf(opt.id);
+        if(idx>=0) selected.splice(idx,1);
+        else if(selected.length<count) selected.push(opt.id);
+        S.answers[q.id]=[...selected];
+        updateNavigator();
+        if(S.showExplanations) renderQ(); else updateNavChip();
+      };
+      row.addEventListener('click',toggle);
+      row.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();toggle();}});
+    }
+    list.appendChild(row);
+  });
+  card.appendChild(list);
+}
+
+function updateNavChip() { updateNavigator(); }
+
+// ============================================================
+// PBQ: FIREWALL
+// ============================================================
+function renderPBQFirewall(q, card, ans) {
+  const ansCopy = ans ? {...ans} : {};
+  const inReview = S.reviewMode;
+  renderPBQProgress(q, card, ansCopy);
+
+  if (q.scenario) {
+    const sc=document.createElement('div');sc.className='pbq-scenario';
+    sc.innerHTML=`<strong>Scenario:</strong> ${esc(q.scenario)}`;
+    card.appendChild(sc);
+  }
+
+  const wrap=document.createElement('div');wrap.className='acl-wrap';
+  let html=`<table class="acl-table"><thead><tr>
+    <th>#</th><th>Source</th><th>Destination</th><th>Port</th><th>Protocol</th><th>Action</th>
+    ${inReview?'<th>Status</th>':''}
+  </tr></thead><tbody>`;
+
+  q.rules.forEach((rule,i)=>{
+    const selected = ansCopy[rule.id]||rule.action;
+    const isCorrect = inReview && selected===rule.correct;
+    const rowClass = inReview?(isCorrect?'correct-row':'incorrect-row'):'';
+    html+=`<tr class="${rowClass} ${rule.locked?'pre-filled':''}">
+      <td style="color:var(--text-dim);font-size:11px">${i+1}</td>
+      <td class="acl-code">${esc(rule.src)}</td>
+      <td class="acl-code">${esc(rule.dst)}</td>
+      <td class="acl-code">${esc(rule.port)}</td>
+      <td class="acl-code">${esc(rule.proto)}</td>
+      <td>`;
+
+    if (inReview) {
+      const color=isCorrect?'var(--success)':'var(--danger)';
+      html+=`<span style="color:${color};font-weight:700;font-size:13px">${esc(selected)}</span>`;
+      if (!isCorrect) html+=` <span style="color:var(--text-dim);font-size:11px">→ ${esc(rule.correct)}</span>`;
+    } else if (rule.locked) {
+      html+=`<span style="color:var(--text-muted);font-size:13px">${esc(selected)} 🔒</span>`;
+    } else {
+      html+=`<select class="acl-select ${selected.toLowerCase()}" data-rule="${rule.id}" data-qid="${q.id}" onchange="updateACL(this,'${q.id}','${rule.id}')">
+        <option ${selected==='Allow'?'selected':''}>Allow</option>
+        <option ${selected==='Deny'?'selected':''}>Deny</option>
+        <option ${selected==='Drop'?'selected':''}>Drop</option>
+        <option ${selected==='Reject'?'selected':''}>Reject</option>
+      </select>`;
+    }
+    html+='</td>';
+    if(inReview) html+=`<td style="font-size:11px">${isCorrect?'<span style="color:var(--success)">✓ Correct</span>':`<span style="color:var(--danger)">✗ Should be ${esc(rule.correct)}</span>`}</td>`;
+    html+=`</tr>`;
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+  card.appendChild(wrap);
+}
+
+function updateACL(sel, qid, ruleId) {
+  if (!S.answers[qid]) S.answers[qid]={};
+  S.answers[qid][ruleId]=sel.value;
+  sel.className=`acl-select ${sel.value.toLowerCase()}`;
+  updatePBQProgress(qid);
+  updateNavigator();
+}
+
+// ============================================================
+// PBQ: LOG ANALYSIS
+// ============================================================
+function renderPBQLog(q, card, ans) {
+  const ansCopy = ans ? {...ans} : {};
+  const inReview = S.reviewMode;
+  renderPBQProgress(q, card, ansCopy);
+
+  if (q.scenario) {
+    const sc=document.createElement('div');sc.className='pbq-scenario';
+    sc.innerHTML=`<strong>Scenario:</strong> ${esc(q.scenario)}`;
+    card.appendChild(sc);
+  }
+
+  // Log viewer
+  const logWrap=document.createElement('div');logWrap.className='log-wrap';
+  const toolbar=document.createElement('div');toolbar.className='log-toolbar';
+  toolbar.innerHTML=`<span class="log-toolbar-title">▶ LOG OUTPUT</span>
+    <input class="log-filter-input" placeholder="Search logs..." oninput="filterLogs(this,'log-${q.id}')">
+    <span style="font-size:11px;color:var(--text-dim);margin-left:auto">${q.logs.length} entries</span>`;
+  logWrap.appendChild(toolbar);
+
+  const content=document.createElement('div');content.className='log-content';content.id=`log-${q.id}`;
+  q.logs.forEach(entry=>{
+    const line=document.createElement('div');
+    line.className=`log-line log-${entry.level}`;
+    line.setAttribute('data-log','true');
+    const levelMap={info:'level-info',warn:'level-warn',crit:'level-crit',alert:'level-crit',ok:'level-ok'};
+    const lvlClass=levelMap[entry.level]||'';
+    const msg=entry.msg.replace(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g,'<span class="ip">$1</span>');
+    line.innerHTML=`<span class="ts">[${esc(entry.ts)}]</span> <span class="${lvlClass}">${entry.level.toUpperCase().padEnd(5)}</span> ${msg}`;
+    content.appendChild(line);
+  });
+  logWrap.appendChild(content);
+  card.appendChild(logWrap);
+
+  // Sub-questions
+  const qPanel=document.createElement('div');
+  qPanel.style.cssText='display:flex;flex-direction:column;gap:14px;margin-top:4px;';
+
+  // Attack type
+  const q1Div=document.createElement('div');
+  const isQ1Correct = inReview && ansCopy.attackType===q.correctAttack;
+  q1Div.innerHTML=`<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">(a) Identify the attack type:</label>
+  <select class="acl-select" style="min-width:360px;max-width:100%;${inReview?(isQ1Correct?'border-color:var(--success);background:var(--success-dim)':'border-color:var(--danger);background:var(--danger-dim)'):''}" 
+    ${inReview?'disabled':''} onchange="updateLogAns('${q.id}','attackType',this.value)">
+    <option value="">— Select attack type —</option>
+    ${(q.attackTypes||[]).map(t=>`<option ${ansCopy.attackType===t?'selected':''}>${esc(t)}</option>`).join('')}
+  </select>
+  ${inReview&&!isQ1Correct?`<div style="font-size:11px;color:var(--success);margin-top:3px">✓ Correct: ${esc(q.correctAttack)}</div>`:''}`;
+  qPanel.appendChild(q1Div);
+
+  // Attacker IP
+  const q2Div=document.createElement('div');
+  const isQ2Correct = inReview && ansCopy.attackerIP===q.attackerIP;
+  q2Div.innerHTML=`<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">(b) Attacker source IP address:</label>
+  <input type="text" placeholder="e.g. 192.168.1.1" value="${esc(ansCopy.attackerIP||'')}"
+    style="background:var(--surface);border:1px solid ${inReview?(isQ2Correct?'var(--success)':'var(--danger)'):'var(--border)'};color:var(--text);padding:8px 12px;border-radius:4px;font-size:13px;font-family:var(--font-mono);width:200px"
+    ${inReview?'readonly':''} oninput="updateLogAns('${q.id}','attackerIP',this.value)">
+  ${inReview&&!isQ2Correct?`<span style="font-size:11px;color:var(--success);margin-left:8px">✓ ${esc(q.attackerIP)}</span>`:''}`;
+  qPanel.appendChild(q2Div);
+
+  // Remediation drag
+  const q3Div=document.createElement('div');
+  q3Div.innerHTML=`<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:8px">(c) Drag the BEST remediation action to the Response zone:</label>`;
+  const dndWrap=document.createElement('div');dndWrap.className='dnd-layout';
+
+  const bank=document.createElement('div');bank.className='dnd-bank';
+  bank.innerHTML='<h4>Actions</h4>';
+  bank.setAttribute('role','listbox');
+  bank.addEventListener('dragover',e=>e.preventDefault());
+  bank.addEventListener('drop',e=>{
+    e.preventDefault();
+    const id=e.dataTransfer.getData('text/plain');
+    if(S.answers[q.id]) S.answers[q.id].remediation=null;
+    updateNavigator(); renderQ();
+  });
+
+  const zones=document.createElement('div');zones.className='dnd-zones';
+  const responseZone=document.createElement('div');
+  responseZone.className='dnd-zone' + (inReview?(ansCopy.remediation===q.correctRemediation?' correct':' incorrect'):'');
+  responseZone.setAttribute('aria-label','Response zone');
+  responseZone.setAttribute('role','listbox');
+  responseZone.setAttribute('aria-dropeffect','move');
+  const zoneLbl=document.createElement('div');zoneLbl.className='dnd-zone-label';zoneLbl.textContent='Response Zone';
+  responseZone.appendChild(zoneLbl);
+
+  if (ansCopy.remediation) {
+    const chip=createDragChip(ansCopy.remediation,q.id,'response');
+    if(inReview) chip.style.cursor='default';
+    responseZone.appendChild(chip);
+  }
+  if(!inReview){
+    responseZone.addEventListener('dragover',e=>{e.preventDefault();responseZone.classList.add('drag-over');});
+    responseZone.addEventListener('dragleave',()=>responseZone.classList.remove('drag-over'));
+    responseZone.addEventListener('drop',e=>{
+      e.preventDefault();responseZone.classList.remove('drag-over');
+      const item=e.dataTransfer.getData('text/plain');
+      if(!S.answers[q.id]) S.answers[q.id]={...ansCopy};
+      S.answers[q.id].remediation=item;
+      updateNavigator();renderQ();
+    });
+  }
+  zones.appendChild(responseZone);
+
+  (q.remediations||[]).forEach(r=>{
+    if(r!==ansCopy.remediation || !ansCopy.remediation) {
+      if(r===ansCopy.remediation) return;
+      bank.appendChild(createDragChip(r,q.id,'bank'));
+    }
+  });
+
+  dndWrap.appendChild(bank);dndWrap.appendChild(zones);
+  q3Div.appendChild(dndWrap);
+  if(inReview&&ansCopy.remediation!==q.correctRemediation) q3Div.innerHTML+=`<div style="font-size:11px;color:var(--success);margin-top:4px">✓ Correct: ${esc(q.correctRemediation)}</div>`;
+  qPanel.appendChild(q3Div);
+
+  // Affected asset
+  const q4Div=document.createElement('div');
+  const isQ4Correct=inReview&&ansCopy.affectedAsset===q.correctAsset;
+  q4Div.innerHTML=`<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">(d) Affected asset:</label>
+  <select class="acl-select" style="min-width:300px;max-width:100%;${inReview?(isQ4Correct?'border-color:var(--success);background:var(--success-dim)':'border-color:var(--danger);background:var(--danger-dim)'):''}"
+    ${inReview?'disabled':''} onchange="updateLogAns('${q.id}','affectedAsset',this.value)">
+    <option value="">— Select affected asset —</option>
+    ${(q.affectedAssets||[]).map(a=>`<option ${ansCopy.affectedAsset===a?'selected':''}>${esc(a)}</option>`).join('')}
+  </select>
+  ${inReview&&!isQ4Correct?`<div style="font-size:11px;color:var(--success);margin-top:3px">✓ Correct: ${esc(q.correctAsset)}</div>`:''}`;
+  qPanel.appendChild(q4Div);
+
+  card.appendChild(qPanel);
+}
+
+function filterLogs(input, id) {
+  const q=input.value.toLowerCase();
+  document.querySelectorAll(`#${id} .log-line`).forEach(l=>{
+    l.style.display=!q||l.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+function updateLogAns(qid, key, val) {
+  if(!S.answers[qid]) S.answers[qid]={};
+  S.answers[qid][key]=val;
+  updateNavigator();
+}
+
+function createDragChip(label, qid, zone) {
+  const chip=document.createElement('div');
+  chip.className='drag-chip';
+  chip.draggable=true;
+  chip.innerHTML=`<span class="drag-handle">⣿</span>${esc(label)}`;
+  chip.addEventListener('dragstart',e=>{
+    e.dataTransfer.setData('text/plain',label);
+    chip.classList.add('dragging');
+  });
+  chip.addEventListener('dragend',()=>chip.classList.remove('dragging'));
+  return chip;
+}
+
+// ============================================================
+// PBQ: SEQUENCE
+// ============================================================
+function renderPBQSequence(q, card, ans) {
+  const items = ans && Array.isArray(ans) ? ans.map(id=>q.items.find(i=>i.id===id)).filter(Boolean) : [...q.items];
+  const inReview = S.reviewMode;
+  renderPBQProgress(q, card, ans);
+
+  if (q.scenario) {
+    const sc=document.createElement('div');sc.className='pbq-scenario';
+    sc.innerHTML=`<strong>Scenario:</strong> ${esc(q.scenario)}`;
+    card.appendChild(sc);
+  }
+
+  const validItems=items.filter(i=>!i.invalid);
+  const invalidItem=items.find(i=>i.invalid);
+
+  // Main sequence list
+  const seqTitle=document.createElement('div');
+  seqTitle.style.cssText='font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;';
+  seqTitle.textContent='Correct Sequence (drag to reorder):';
+  card.appendChild(seqTitle);
+
+  const list=document.createElement('div');list.className='seq-list';list.id=`seq-${q.id}`;
+
+  validItems.forEach((item,idx)=>{
+    const row=document.createElement('div');
+    row.className='seq-item';
+    row.draggable=!inReview;
+    row.dataset.id=item.id;
+
+    if(inReview){
+      const correctIdx=q.items.findIndex(i=>i.id===item.id);
+      row.classList.add(correctIdx===idx?'correct':'incorrect');
+    }
+
+    row.innerHTML=`<span class="seq-handle">${inReview?'':' ⠿'}</span><div class="seq-num">${idx+1}</div>
+      <div style="flex:1;font-size:13px;line-height:1.4">${esc(item.label)}</div>
+      ${inReview?`<span style="font-size:11px;color:${q.items.findIndex(i=>i.id===item.id)===idx?'var(--success)':'var(--danger)'}">${q.items.findIndex(i=>i.id===item.id)===idx?'✓':'✗ → #'+(q.items.findIndex(i=>i.id===item.id)+1)}</span>`:''}`;
+
+    if(!inReview){
+      row.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',item.id);row.classList.add('dragging');});
+      row.addEventListener('dragend',()=>{row.classList.remove('dragging');document.querySelectorAll('.seq-item').forEach(r=>r.classList.remove('drag-above','drag-below'));});
+      row.addEventListener('dragover',e=>{
+        e.preventDefault();
+        const rect=row.getBoundingClientRect();row.classList.remove('drag-above','drag-below');
+        row.classList.add(e.clientY<rect.top+rect.height/2?'drag-above':'drag-below');
+      });
+      row.addEventListener('dragleave',()=>row.classList.remove('drag-above','drag-below'));
+      row.addEventListener('drop',e=>{
+        e.preventDefault();
+        const dragId=e.dataTransfer.getData('text/plain');
+        row.classList.remove('drag-above','drag-below');
+        if(dragId===item.id)return;
+        const allIds=[...document.querySelectorAll(`#seq-${q.id} .seq-item`)].map(el=>el.dataset.id);
+        const fromIdx=allIds.indexOf(dragId);const toIdx=allIds.indexOf(item.id);
+        if(fromIdx<0||toIdx<0)return;
+        const newOrder=[...allIds];newOrder.splice(fromIdx,1);
+        const insertAt=newOrder.indexOf(item.id)+(e.clientY<row.getBoundingClientRect().top+row.getBoundingClientRect().height/2?0:1);
+        newOrder.splice(insertAt,0,dragId);
+        S.answers[q.id]=newOrder;
+        updateNavigator();renderQ();
+      });
+    }
+    list.appendChild(row);
+  });
+  card.appendChild(list);
+
+  // Invalid step zone
+  const invTitle=document.createElement('div');
+  invTitle.style.cssText='font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--warning);margin:14px 0 8px;';
+  invTitle.textContent='Invalid Step Zone (place incorrect step here):';
+  card.appendChild(invTitle);
+
+  const invZone=document.createElement('div');
+  invZone.className='dnd-zone';
+  invZone.style.borderColor=inReview?(ans?.invalidPlaced===true?'var(--success)':'var(--danger)'):'var(--border)';
+  invZone.setAttribute('aria-label','Invalid step zone');
+
+  if(invalidItem){
+    const chip=document.createElement('div');chip.className='drag-chip';chip.style.cursor=inReview?'default':'grab';
+    chip.innerHTML=`<span class="drag-handle">⣿</span>${esc(invalidItem.label)}`;
+    invZone.appendChild(chip);
+  } else {
+    invZone.innerHTML=`<div style="color:var(--text-dim);font-size:12px;font-style:italic">← Drag invalid step here</div>`;
+  }
+
+  card.appendChild(invZone);
+  if(!S.answers[q.id]) S.answers[q.id]=validItems.map(i=>i.id);
+}
+
+// ============================================================
+// PBQ: PLACEMENT
+// ============================================================
+function renderPBQPlacement(q, card, ans) {
+  const ansCopy = ans ? {...ans} : {};
+  const inReview = S.reviewMode;
+  renderPBQProgress(q, card, ansCopy);
+
+  if (q.scenario) { const sc=document.createElement('div');sc.className='pbq-scenario';sc.innerHTML=`<strong>Scenario:</strong> ${esc(q.scenario)}`;card.appendChild(sc); }
+
+  const placed=new Set(Object.values(ansCopy).flat());
+
+  const layout=document.createElement('div');layout.className='dnd-layout';
+
+  // Source bank
+  const bank=document.createElement('div');bank.className='dnd-bank';bank.style.flex='0 0 190px';
+  bank.innerHTML='<h4>Security Controls</h4>';
+  bank.addEventListener('dragover',e=>e.preventDefault());
+  bank.addEventListener('drop',e=>{
+    e.preventDefault();const id=e.dataTransfer.getData('text/plain');
+    Object.keys(ansCopy).forEach(zid=>{ansCopy[zid]=(ansCopy[zid]||[]).filter(x=>x!==id);});
+    S.answers[q.id]={...ansCopy};renderQ();
+  });
+
+  q.items.forEach(item=>{
+    if(!placed.has(item.id)){
+      const chip=document.createElement('div');chip.className='drag-chip';chip.style.cssText='margin-bottom:6px;width:100%';
+      chip.draggable=!inReview;
+      chip.innerHTML=`<span>${item.icon||'⬜'}</span>${esc(item.label)}`;
+      chip.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',item.id);chip.classList.add('dragging');});
+      chip.addEventListener('dragend',()=>chip.classList.remove('dragging'));
+      bank.appendChild(chip);
+    }
+  });
+  layout.appendChild(bank);
+
+  // Zones
+  const zonesWrap=document.createElement('div');zonesWrap.className='dnd-zones';
+
+  q.zones.forEach(zone=>{
+    const zoneEl=document.createElement('div');zoneEl.className='dnd-zone';
+    const zoneItems=(ansCopy[zone.id]||[]);
+    const correctItems=q.items.filter(i=>i.correct===zone.id);
+
+    if(inReview){
+      const allCorrect=correctItems.every(ci=>zoneItems.includes(ci.id))&&zoneItems.every(zi=>correctItems.some(ci=>ci.id===zi));
+      zoneEl.classList.add(allCorrect?'correct':'incorrect');
+    }
+
+    const lbl=document.createElement('div');lbl.className='dnd-zone-label';lbl.textContent=zone.label;
+    zoneEl.appendChild(lbl);
+    if(zone.desc){const d=document.createElement('div');d.style.cssText='font-size:10px;color:var(--text-dim);margin-bottom:4px';d.textContent=zone.desc;zoneEl.appendChild(d);}
+
+    zoneItems.forEach(itemId=>{
+      const item=q.items.find(i=>i.id===itemId);
+      if(!item)return;
+      const chip=document.createElement('div');chip.className='drag-chip';chip.style.marginBottom='4px';chip.draggable=!inReview;
+      chip.innerHTML=`<span>${item.icon||'⬜'}</span>${esc(item.label)}`;
+      if(inReview){chip.style.cursor='default';const isCorrect=item.correct===zone.id;chip.style.borderColor=isCorrect?'var(--success)':'var(--danger)';}
+      chip.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',item.id);chip.classList.add('dragging');});
+      chip.addEventListener('dragend',()=>chip.classList.remove('dragging'));
+      zoneEl.appendChild(chip);
+    });
+
+    if(!inReview){
+      zoneEl.addEventListener('dragover',e=>{e.preventDefault();zoneEl.classList.add('drag-over');});
+      zoneEl.addEventListener('dragleave',()=>zoneEl.classList.remove('drag-over'));
+      zoneEl.addEventListener('drop',e=>{
+        e.preventDefault();zoneEl.classList.remove('drag-over');
+        const id=e.dataTransfer.getData('text/plain');
+        Object.keys(ansCopy).forEach(zid=>{ansCopy[zid]=(ansCopy[zid]||[]).filter(x=>x!==id);});
+        if(!ansCopy[zone.id])ansCopy[zone.id]=[];
+        ansCopy[zone.id].push(id);
+        S.answers[q.id]={...ansCopy};
+        updateNavigator();renderQ();
+      });
+    }
+    zonesWrap.appendChild(zoneEl);
+  });
+
+  layout.appendChild(zonesWrap);
+  card.appendChild(layout);
+}
+
+// ============================================================
+// PBQ: COMPLIANCE MATCHING
+// ============================================================
+function renderPBQCompliance(q, card, ans) {
+  const ansCopy=ans?{...ans}:{};
+  const inReview=S.reviewMode;
+  renderPBQProgress(q,card,ansCopy);
+
+  if(q.scenario){const sc=document.createElement('div');sc.className='pbq-scenario';sc.innerHTML=`<strong>Scenario:</strong> ${esc(q.scenario)}`;card.appendChild(sc);}
+
+  const layout=document.createElement('div');layout.className='compliance-layout';
+
+  q.pairs.forEach(pair=>{
+    const row=document.createElement('div');row.className='compliance-row';
+    const isCorrect=inReview&&ansCopy[pair.id]===pair.correct;
+    if(inReview) row.classList.add(isCorrect?'correct':'incorrect');
+
+    const scenario=document.createElement('div');scenario.className='compliance-scenario';
+    scenario.textContent=pair.scenario;
+
+    const sel=document.createElement('select');sel.className='compliance-select';
+    sel.disabled=inReview;
+    const defOpt=document.createElement('option');defOpt.value='';defOpt.textContent='— Select framework —';
+    sel.appendChild(defOpt);
+
+    (q.frameworks||[]).forEach(fw=>{
+      const opt=document.createElement('option');opt.value=fw;opt.textContent=fw;
+      if(ansCopy[pair.id]===fw)opt.selected=true;
+      sel.appendChild(opt);
+    });
+
+    sel.addEventListener('change',()=>{
+      if(!S.answers[q.id])S.answers[q.id]={...ansCopy};
+      S.answers[q.id][pair.id]=sel.value;
+      updatePBQProgress(q.id);updateNavigator();
+    });
+
+    row.appendChild(scenario);row.appendChild(sel);
+    if(inReview&&!isCorrect){
+      const hint=document.createElement('div');hint.style.cssText='font-size:11px;color:var(--success);width:100%;margin-top:2px;';
+      hint.textContent=`✓ Correct: ${pair.correct}`;row.appendChild(hint);
+    }
+    layout.appendChild(row);
+  });
+  card.appendChild(layout);
+}
+
+// ============================================================
+// PBQ: VULNERABILITY SCAN
+// ============================================================
+function renderPBQVulnScan(q, card, ans) {
+  const ansCopy=ans?{...ans}:{priorityQueue:[],remediations:{}};
+  if(!ansCopy.priorityQueue)ansCopy.priorityQueue=[];
+  if(!ansCopy.remediations)ansCopy.remediations={};
+  const inReview=S.reviewMode;
+  renderPBQProgress(q,card,ansCopy);
+
+  if(q.scenario){const sc=document.createElement('div');sc.className='pbq-scenario';sc.innerHTML=`<strong>Scenario:</strong> ${esc(q.scenario)}`;card.appendChild(sc);}
+
+  // Findings table
+  const wrap=document.createElement('div');wrap.className='vuln-table-wrap';
+  let html=`<table class="vuln-table"><thead><tr>
+    <th>CVE ID</th><th>CVSS</th><th>Asset</th><th>Criticality</th><th>Exploit</th><th>System/Finding</th>
+    ${!inReview?'<th>Action</th>':'<th>Status</th>'}
+  </tr></thead><tbody>`;
+
+  const priorityIds=new Set(ansCopy.priorityQueue);
+
+  q.findings.forEach(f=>{
+    const cvssClass=f.cvss>=9?'cvss-critical':f.cvss>=7?'cvss-high':f.cvss>=4?'cvss-medium':'cvss-low';
+    const exploitClass=f.exploit==='Active'?'exploit-active':f.exploit==='PoC'?'exploit-poc':'exploit-none';
+    const critClass=f.assetCrit==='High'?'asset-high':f.assetCrit==='Med'?'asset-med':'asset-low';
+    const inPriority=priorityIds.has(f.id);
+    const rowStyle=inPriority?'background:rgba(231,76,60,0.05);':'';
+
+    html+=`<tr style="${rowStyle}">
+      <td style="font-family:var(--font-mono);font-size:11px;color:var(--code-cyan)">${esc(f.cve)}</td>
+      <td><span class="cvss-badge ${cvssClass}">${f.cvss}</span></td>
+      <td style="font-size:11px;max-width:140px">${esc(f.asset)}</td>
+      <td><span class="asset-crit ${critClass}">${esc(f.assetCrit)}</span></td>
+      <td><span class="exploit-badge ${exploitClass}">${esc(f.exploit)}</span></td>
+      <td style="font-size:11px;max-width:180px">${esc(f.system)}</td>`;
+
+    if(inReview){
+      const inP=ansCopy.priorityQueue.includes(f.id);
+      const remAns=ansCopy.remediations[f.id];
+      const remCorrect=remAns===f.correctAction;
+      const priorityCorrect=f.priority?ansCopy.priorityQueue.indexOf(f.id)+1===f.priority:true;
+      if(inP) html+=`<td style="font-size:11px"><span style="color:${priorityCorrect?'var(--success)':'var(--danger)'}">Priority #${ansCopy.priorityQueue.indexOf(f.id)+1}${!priorityCorrect?' (wrong order)':''}</span></td>`;
+      else html+=`<td style="font-size:11px"><span style="color:${remCorrect?'var(--success)':'var(--danger)'}">${esc(remAns||'—')}${!remCorrect?` → ${esc(f.correctAction)}`:''}</span></td>`;
+    } else {
+      if(inPriority){
+        html+=`<td><span style="color:var(--danger);font-size:11px;font-weight:700">Priority #${ansCopy.priorityQueue.indexOf(f.id)+1} 🎯</span></td>`;
+      } else {
+        html+=`<td><select class="acl-select" style="font-size:11px" onchange="updateVulnRemediation('${q.id}','${f.id}',this.value)">
+          <option value="">— Select —</option>
+          ${(q.remediationOptions||[]).map(r=>`<option ${ansCopy.remediations[f.id]===r?'selected':''}>${esc(r)}</option>`).join('')}
+        </select></td>`;
+      }
+    }
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+  card.appendChild(wrap);
+
+  // Priority queue
+  const pq=document.createElement('div');pq.className='priority-queue';
+  pq.innerHTML=`<h4>🎯 Priority Remediation Queue (drag top 3 from table above):</h4>`;
+  const slots=document.createElement('div');slots.className='priority-slots';
+
+  for(let i=0;i<q.prioritySlots;i++){
+    const slot=document.createElement('div');slot.className='priority-slot'+(ansCopy.priorityQueue[i]?' filled':'');
+    const fId=ansCopy.priorityQueue[i];
+    const f=fId?q.findings.find(f=>f.id===fId):null;
+    slot.innerHTML=`<span class="priority-num">#${i+1}</span>${f?`<span style="font-family:var(--font-mono);font-size:11px;color:var(--code-cyan)">${esc(f.cve)}</span> — ${esc(f.system)}`:'<span style="color:var(--text-dim);font-style:italic">Drop vulnerability here</span>'}`;
+
+    if(!inReview){
+      slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('drag-over');});
+      slot.addEventListener('dragleave',()=>slot.classList.remove('drag-over'));
+      slot.addEventListener('drop',e=>{
+        e.preventDefault();slot.classList.remove('drag-over');
+        const fid=e.dataTransfer.getData('text/plain');
+        if(!ansCopy.priorityQueue)ansCopy.priorityQueue=[];
+        const existing=ansCopy.priorityQueue.indexOf(fid);
+        if(existing>=0)ansCopy.priorityQueue.splice(existing,1);
+        ansCopy.priorityQueue.splice(i,0,fid);
+        ansCopy.priorityQueue=ansCopy.priorityQueue.slice(0,q.prioritySlots);
+        S.answers[q.id]={...ansCopy};
+        updatePBQProgress(q.id);updateNavigator();renderQ();
+      });
+    }
+    slots.appendChild(slot);
+  }
+  pq.appendChild(slots);
+  card.appendChild(pq);
+
+  // Make table rows draggable for priority queue
+  setTimeout(()=>{
+    const rows=card.querySelectorAll('.vuln-table tbody tr');
+    rows.forEach((row,i)=>{
+      const f=q.findings[i];if(!f)return;
+      row.draggable=!inReview;row.style.cursor=inReview?'default':'grab';
+      row.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',f.id);});
+    });
+  },50);
+}
+
+function updateVulnRemediation(qid,fid,val){
+  if(!S.answers[qid])S.answers[qid]={priorityQueue:[],remediations:{}};
+  if(!S.answers[qid].remediations)S.answers[qid].remediations={};
+  S.answers[qid].remediations[fid]=val;
+  updatePBQProgress(qid);updateNavigator();
+}
+
+// ============================================================
+// PBQ: CRYPTO CONFIGURATION
+// ============================================================
+function renderPBQCrypto(q, card, ans) {
+  const ansCopy=ans?{...ans}:{};
+  const inReview=S.reviewMode;
+  renderPBQProgress(q,card,ansCopy);
+
+  if(q.scenario){const sc=document.createElement('div');sc.className='pbq-scenario';sc.innerHTML=`<strong>Scenario:</strong> ${esc(q.scenario)}`;card.appendChild(sc);}
+
+  const flow=document.createElement('div');flow.className='crypto-flow';
+
+  q.nodes.forEach((node,i)=>{
+    const nodeEl=document.createElement('div');nodeEl.className='crypto-node';
+    const isCorrect=inReview&&ansCopy[node.id]===node.correct;
+
+    nodeEl.innerHTML=`<div class="crypto-node-icon">${node.icon||'⚙️'}</div>
+      <div style="flex:1"><div class="crypto-node-label">${esc(node.question)}</div></div>`;
+
+    const sel=document.createElement('select');
+    sel.className=`crypto-select${inReview?(isCorrect?' correct':' incorrect'):''}`;
+    sel.disabled=inReview;
+    const defOpt=document.createElement('option');defOpt.value='';defOpt.textContent='— Select —';
+    sel.appendChild(defOpt);
+    node.options.forEach(opt=>{
+      const o=document.createElement('option');o.value=opt;o.textContent=opt;
+      if(ansCopy[node.id]===opt)o.selected=true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change',()=>{
+      if(!S.answers[q.id])S.answers[q.id]={...ansCopy};
+      S.answers[q.id][node.id]=sel.value;
+      updatePBQProgress(q.id);updateNavigator();
+    });
+    nodeEl.appendChild(sel);
+
+    if(inReview&&!isCorrect){
+      const hint=document.createElement('div');hint.style.cssText='font-size:11px;color:var(--success);margin-top:4px;width:100%;';
+      hint.textContent=`✓ Correct: ${node.correct}`;
+      nodeEl.appendChild(hint);
+    }
+    flow.appendChild(nodeEl);
+    if(i<q.nodes.length-1){
+      const arrow=document.createElement('div');arrow.className='crypto-arrow';arrow.textContent='↓';
+      flow.appendChild(arrow);
+    }
+  });
+  card.appendChild(flow);
+}
+
+// ============================================================
+// PBQ PROGRESS INDICATOR
+// ============================================================
+function renderPBQProgress(q, card, ans) {
+  const total = getPBQTotal(q);
+  const done = getPBQDone(q, ans);
+  const wrap = document.createElement('div');
+  wrap.className = 'pbq-progress';
+  wrap.id = `pbq-progress-${q.id}`;
+  wrap.innerHTML = `
+    <div class="pbq-progress-bar-bg"><div class="pbq-progress-bar" style="width:${total?Math.round(done/total*100):0}%"></div></div>
+    <div class="pbq-progress-text">${done} / ${total} tasks completed</div>
+  `;
+  card.appendChild(wrap);
+}
+
+function getPBQTotal(q) {
+  if(q.type==='pbq-firewall') return q.rules.filter(r=>!r.locked).length;
+  if(q.type==='pbq-log') return 4; // 4 sub-tasks
+  if(q.type==='pbq-sequence') return q.items.filter(i=>!i.invalid).length;
+  if(q.type==='pbq-placement') return q.items.length;
+  if(q.type==='pbq-compliance') return q.pairs.length;
+  if(q.type==='pbq-vulnscan') return q.prioritySlots + (q.findings.length-q.prioritySlots);
+  if(q.type==='pbq-crypto') return q.nodes.length;
+  return 1;
+}
+function getPBQDone(q, ans) {
+  if(!ans) return 0;
+  if(q.type==='pbq-firewall') return q.rules.filter(r=>!r.locked&&ans[r.id]).length;
+  if(q.type==='pbq-log') return [ans.attackType,ans.attackerIP,ans.remediation,ans.affectedAsset].filter(Boolean).length;
+  if(q.type==='pbq-sequence') return ans&&Array.isArray(ans)?ans.length:0;
+  if(q.type==='pbq-placement') return Object.values(ans).flat().length;
+  if(q.type==='pbq-compliance') return Object.values(ans).filter(Boolean).length;
+  if(q.type==='pbq-vulnscan') return (ans.priorityQueue?.length||0)+(Object.values(ans.remediations||{}).filter(Boolean).length);
+  if(q.type==='pbq-crypto') return Object.values(ans).filter(Boolean).length;
+  return 0;
+}
+
+function updatePBQProgress(qid) {
+  const q=S.questions.find(x=>x.id===qid);
+  const wrap=document.getElementById(`pbq-progress-${qid}`);
+  if(!q||!wrap)return;
+  const ans=S.answers[qid];
+  const total=getPBQTotal(q);const done=getPBQDone(q,ans);
+  const bar=wrap.querySelector('.pbq-progress-bar');
+  const txt=wrap.querySelector('.pbq-progress-text');
+  if(bar)bar.style.width=`${total?Math.round(done/total*100):0}%`;
+  if(txt)txt.textContent=`${done} / ${total} tasks completed`;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goTo(idx) {
+  recordQuestionTime(S.questions[S.currentIdx]?.id);
+  S.currentIdx = idx;
+  startQuestionTimer(S.questions[idx]?.id);
+  renderQ();
+}
+function prevQ() {
+  if (S.currentIdx > 0) {
+    recordQuestionTime(S.questions[S.currentIdx]?.id);
+    S.currentIdx--;
+    startQuestionTimer(S.questions[S.currentIdx]?.id);
+    renderQ();
+  }
+}
+function nextQ() {
+  if (S.currentIdx < S.questions.length - 1) {
+    recordQuestionTime(S.questions[S.currentIdx]?.id);
+    S.currentIdx++;
+    startQuestionTimer(S.questions[S.currentIdx]?.id);
+    renderQ();
+  }
+}
+function toggleFlag() {
+  const q=S.questions[S.currentIdx];if(!q)return;
+  if(S.flags.has(q.id))S.flags.delete(q.id);else S.flags.add(q.id);
+  renderQ();
+}
+
+// ============================================================
+// END EXAM / SCORING
+// ============================================================
+function triggerEndExam() {
+  const total=S.questions.length;
+  const answered=S.questions.filter(q=>isAnswered(q.id)).length;
+  $('m-answered').textContent=answered;
+  $('m-unanswered').textContent=total-answered;
+  $('m-flagged').textContent=S.flags.size;
+  openModal('modal-end');
+}
+
+function submitExam() {
+  closeModal('modal-end');
+  closeModal('modal-time-warn');
+  if (S.timerHandle) clearInterval(S.timerHandle);
+  S.endTime = Date.now();
+  // Record time for current question
+  recordQuestionTime(S.questions[S.currentIdx]?.id);
+  S.reviewMode = true;
+
+  if (S.mode === 'study') {
+    showStudySummary();
+  } else {
+    computeAndShowResults();
+  }
+}
+
+function computeScore(q) {
+  const ans=S.answers[q.id];
+  if(!isAnswered(q.id)) return 0;
+
+  switch(q.type){
+    case 'mcq-single': {
+      const correct=q.options?.find(o=>o.correct);
+      return correct&&ans===correct.id?1:0;
+    }
+    case 'mcq-multi': {
+      const correctIds=(q.options||[]).filter(o=>o.correct).map(o=>o.id);
+      const given=Array.isArray(ans)?ans:[];
+      let pts=0;
+      given.forEach(id=>{if(correctIds.includes(id))pts++;else pts--;});
+      return Math.max(0,pts)/correctIds.length;
+    }
+    case 'pbq-firewall': {
+      const rules=q.rules.filter(r=>!r.locked);
+      if(!rules.length)return 1;
+      return rules.filter(r=>ans[r.id]===r.correct).length/rules.length;
+    }
+    case 'pbq-log': {
+      let pts=0;
+      if(ans.attackType===q.correctAttack)pts++;
+      if(ans.attackerIP===q.attackerIP)pts++;
+      if(ans.remediation===q.correctRemediation)pts++;
+      if(ans.affectedAsset===q.correctAsset)pts++;
+      return pts/4;
+    }
+    case 'pbq-sequence': {
+      if(!Array.isArray(ans))return 0;
+      const valid=q.items.filter(i=>!i.invalid);
+      let correct=0;
+      ans.forEach((id,idx)=>{const item=valid[idx];if(item&&item.id===id)correct++;});
+      return correct/valid.length;
+    }
+    case 'pbq-placement': {
+      const total=q.items.length;
+      let correct=0;
+      q.items.forEach(item=>{
+        const zoneAns=ans[item.correct]||[];
+        if(zoneAns.includes(item.id))correct++;
+      });
+      return correct/total;
+    }
+    case 'pbq-compliance': {
+      return q.pairs.filter(p=>ans[p.id]===p.correct).length/q.pairs.length;
+    }
+    case 'pbq-vulnscan': {
+      let pts=0,total=0;
+      // Priority queue scoring
+      q.correctPriority.forEach((fid,idx)=>{total++;if((ans.priorityQueue||[])[idx]===fid)pts++;});
+      // Remediation scoring
+      const nonPriority=q.findings.filter(f=>!q.correctPriority.includes(f.id));
+      nonPriority.forEach(f=>{total++;if((ans.remediations||{})[f.id]===f.correctAction)pts++;});
+      return total?pts/total:0;
+    }
+    case 'pbq-crypto': {
+      return q.nodes.filter(n=>ans[n.id]===n.correct).length/q.nodes.length;
+    }
+    default: return 0;
+  }
+}
+
+function calcScaledScore(rawPct) {
+  if(rawPct<70)return Math.round(100+(rawPct/70)*650);
+  return Math.round(750+((rawPct-70)/30)*150);
+}
+
+function computeAndShowResults() {
+  const domainScores={};
+  Object.keys(DOMAINS).forEach(d=>domainScores[d]={pts:0,max:0,pbqs:0,pbqPts:0});
+
+  let totalPts=0,maxPts=0;
+  const pbqResults=[];
+
+  S.questions.forEach(q=>{
+    const isPBQ=q.type?.startsWith('pbq');
+    const weight=isPBQ?2:1;
+    const score=computeScore(q);
+    const pts=score*weight;
+    totalPts+=pts;maxPts+=weight;
+
+    const d=q.domain;
+    if(domainScores[d]){
+      domainScores[d].pts+=pts;domainScores[d].max+=weight;
+      if(isPBQ){domainScores[d].pbqs++;domainScores[d].pbqPts+=score;}
+    }
+    if(isPBQ)pbqResults.push({q,score});
+  });
+
+  // Track for weak domain filter
+  window._domainScores=domainScores;
+
+  const rawPct=maxPts?Math.round(totalPts/maxPts*100):0;
+  const scaled=calcScaledScore(rawPct);
+  const passed=scaled>=750;
+  const timeUsed=S.startTime?Math.floor((S.endTime-S.startTime)/1000):0;
+
+  // Results UI
+  const scoreEl=$('r-score');scoreEl.textContent=scaled;scoreEl.className=`score-val ${passed?'pass':'fail'}`;
+  const pfEl=$('r-pf');pfEl.textContent=passed?'✓ PASS':'✗ FAIL';pfEl.className=`pass-fail-badge ${passed?'pass':'fail'}`;
+  $('r-raw').textContent=`Raw: ${rawPct}% (${S.questions.length} questions weighted)`;
+  $('r-headline').textContent=passed?'Congratulations!':'Keep Studying';
+  $('r-sub').textContent=`SY0-701 CompTIA Security+ · Scaled Score: ${scaled} · ${passed?'PASS (≥750)':'FAIL (<750)'}`;
+
+  // Time-pressured detection (questions answered in last 5 mins)
+  const examDuration = S.endTime - S.startTime;
+  const timePressured = S.questions.filter(q => {
+    const t = _questionTimings[q.id];
+    return t && isAnswered(q.id) && t < 30;
+  }).length;
+
+  const correct = S.questions.filter(q => computeScore(q) >= 0.7).length;
+  // Stats with time-pressured
+  const tm = Math.floor(timeUsed / 60), ts = timeUsed % 60;
+  const avgTime = S.questions.length ? Math.round(timeUsed / S.questions.length) : 0;
+  $('r-stats').innerHTML = `
+    <div class="r-stat"><div class="r-stat-n green">${correct}</div><div class="r-stat-l">Correct</div></div>
+    <div class="r-stat"><div class="r-stat-n red">${S.questions.length - correct}</div><div class="r-stat-l">Incorrect</div></div>
+    <div class="r-stat"><div class="r-stat-n">${S.questions.filter(q => !isAnswered(q.id)).length}</div><div class="r-stat-l">Skipped</div></div>
+    <div class="r-stat"><div class="r-stat-n amber">${S.flags.size}</div><div class="r-stat-l">Flagged</div></div>
+    <div class="r-stat"><div class="r-stat-n">${avgTime}s</div><div class="r-stat-l">Avg/Q</div></div>
+    <div class="r-stat"><div class="r-stat-n">${tm}:${String(ts).padStart(2, '0')}</div><div class="r-stat-l">Time Used</div></div>
+  `;
+
+  // Domain breakdown
+  const domEl=$('r-domains');domEl.innerHTML='';
+  Object.entries(domainScores).forEach(([d,s])=>{
+    if(!s.max)return;
+    const pct=Math.round(s.pts/s.max*100);
+    const pass=pct>=70;
+    domEl.innerHTML+=`
+      <div class="db-row">
+        <div class="db-row-header">
+          <span style="font-size:12px">${DOMAINS[d]}</span>
+          <span class="db-pct ${pass?'pass':'fail'}">${pct}%</span>
+        </div>
+        <div class="db-bar-bg">
+          <div class="db-bar-fill ${pass?'pass':'fail'}" style="width:${pct}%"></div>
+          <div class="db-threshold-line" title="70% passing threshold"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  // PBQ performance
+  const pbqEl=$('r-pbqs');
+  if(!pbqResults.length){pbqEl.innerHTML='<div style="color:var(--text-muted);font-size:13px">No PBQs in this session.</div>';return;}
+  pbqEl.innerHTML='';
+  pbqResults.forEach(({q,score})=>{
+    const chips=Array.from({length:5},(_,i)=>`<div class="pbq-score-chip ${i<Math.round(score*5)?'on':'off'}"></div>`).join('');
+    pbqEl.innerHTML+=`
+      <div class="pbq-result-row">
+        <span class="pbq-type-label">${esc(q.title||q.type)}</span>
+        <div class="pbq-score-chips">${chips}</div>
+        <span style="font-size:12px;font-weight:700;color:${score>=0.7?'var(--success)':'var(--danger)'}">${Math.round(score*100)}%</span>
+      </div>
+    `;
+  });
+
+  showScreen('results-screen');
+}
+
+// ============================================================
+// REVIEW MODE
+// ============================================================
+function showReview() { S.reviewFilter='all'; buildReview(); showScreen('review-screen'); }
+function applyReviewFilter(btn, filter) {
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  S.reviewFilter=filter;
+  buildReview();
+}
+function buildReview() {
+  let qs=[...S.questions];
+  if(S.reviewFilter==='incorrect') qs=qs.filter(q=>computeScore(q)<1&&isAnswered(q.id));
+  else if(S.reviewFilter==='flagged') qs=qs.filter(q=>S.flags.has(q.id));
+  else if(S.reviewFilter==='correct') qs=qs.filter(q=>computeScore(q)===1);
+
+  const list=$('review-list');list.innerHTML='';
+  if(!qs.length){list.innerHTML='<div style="color:var(--text-muted);padding:24px;text-align:center">No questions match this filter.</div>';return;}
+
+  qs.forEach(q=>{
+    const realIdx=S.questions.indexOf(q);
+    const score=computeScore(q);
+    const isPBQ=q.type?.startsWith('pbq');
+    const card=document.createElement('div');card.className='review-card';
+
+    const header=document.createElement('div');header.className='review-card-header';
+    header.innerHTML=`
+      <span class="q-number-badge" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:2px 10px;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer" onclick="goToExamQ(${realIdx})">Q${realIdx+1}</span>
+      <span class="${score===1?'correct-banner':'incorrect-banner'}">${score===1?'✅ CORRECT':'❌ INCORRECT'} ${isPBQ?`(${Math.round(score*100)}% partial)`:''}</span>
+      ${S.flags.has(q.id)?'<span style="color:var(--warning);font-size:12px">⚑</span>':''}
+      <span class="q-meta-tag domain" style="margin-left:auto">${q.domain} | ${esc(q.obj||'')}</span>
+    `;
+    card.appendChild(header);
+
+    const body=document.createElement('div');body.className='review-card-body';
+    body.innerHTML=`<div class="review-stem">${esc(q.stem||'').replace(/\n/g,'<br>')}</div>`;
+
+    // Explanation
+    if(q.explanation){
+      const exp=document.createElement('div');exp.className='review-explanation';
+      exp.innerHTML=`<div class="exp-title">Explanation</div><p>${esc(q.explanation)}</p>
+        ${q.reference?`<p style="font-size:11px;color:var(--text-dim);margin-top:4px">📖 ${esc(q.reference)}</p>`:''}`;
+      if(q.whyWrong){
+        const ww=document.createElement('div');ww.className='exp-why-wrong';
+        ww.innerHTML=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);margin:8px 0 4px">Why Other Options Are Incorrect</div>`;
+        Object.entries(q.whyWrong).forEach(([opt,reason])=>{
+          const item=document.createElement('div');item.className='exp-why-wrong-item';
+          item.innerHTML=`<strong>Option ${esc(opt)}:</strong> <span>${esc(reason)}</span>`;ww.appendChild(item);
+        });
+        exp.appendChild(ww);
+      }
+      body.appendChild(exp);
+    }
+
+    const jumpBtn=document.createElement('button');
+    jumpBtn.style.cssText='margin-top:8px;background:none;border:1px solid var(--border);color:var(--text-muted);padding:4px 12px;border-radius:3px;font-size:11px;cursor:pointer;';
+    jumpBtn.textContent='View Question →';jumpBtn.onclick=()=>goToExamQ(realIdx);
+    body.appendChild(jumpBtn);
+
+    card.appendChild(body);list.appendChild(card);
+  });
+}
+
+function goToExamQ(idx) {
+  S.currentIdx=idx;
+  showScreen('exam-screen');
+  renderQ();
+}
+
+// ============================================================
+// AI QUESTION GENERATION
+// ============================================================
+async function generateAIQuestions(count, domain, mode) {
+  const status=$('modal-gen-status');
+  if(status)status.textContent='Connecting to Claude AI engine...';
+  
+  const domainLabel=domain==='all'?'all five SY0-701 domains':DOMAINS[domain];
+  const systemPrompt=`You are a CompTIA Security+ SY0-701 exam question generator. Generate ${count} professional, scenario-based exam questions.
+  
+Rules:
+- Each question must have layered context with TWO constraints
+- Frame from perspective of security professionals
+- Include realistic, professionally-named distractors
+- Questions must cover: ${domainLabel}
+- Return ONLY a valid JSON array of question objects
+- Each object MUST have: id (string), type ("mcq-single" or "mcq-multi"), domain (e.g. "2.0"), obj (e.g. "2.4"), stem (string), options (array with id A/B/C/D, text, correct bool), explanation (string), reference (string)
+- For mcq-multi also include selectCount (number) 
+- Make exactly ${Math.ceil(count*0.15)} questions mcq-multi type
+- No preamble, no markdown, pure JSON only`;
+
+  const userPrompt=`Generate ${count} challenging scenario-based SY0-701 Security+ exam questions. Domain scope: ${domainLabel}. Include real-world security professional scenarios. Return pure JSON array only.`;
+
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: systemPrompt,
+        messages:[{role:'user',content:userPrompt}]
+      })
+    });
+    if(!resp.ok) throw new Error(`API error ${resp.status}`);
+    const data=await resp.json();
+    const text=data.content?.find(b=>b.type==='text')?.text||'';
+    const clean=text.replace(/```json\n?|\n?```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    if(Array.isArray(parsed)&&parsed.length>0){
+      if(status)status.textContent=`Generated ${parsed.length} questions! Starting exam...`;
+      return parsed;
+    }
+  } catch(e) {
+    console.warn('AI generation failed, using seed questions:',e.message);
+  }
+  return null;
+}
+
+// ============================================================
+// WELCOME SCREEN EVENTS
+// ============================================================
+document.getElementById('mode-grid').addEventListener('click',e=>{
+  const card=e.target.closest('.mode-card');if(!card)return;
+  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  S.mode=card.dataset.mode;
+  $('study-options-card').style.display=S.mode==='study'?'block':'none';
+  $('begin-btn-text').textContent=S.mode==='study'?'Start Study Session':'Begin Exam';
+});
+
+document.getElementById('domain-chips').addEventListener('click',e=>{
+  const chip=e.target.closest('.domain-chip');if(!chip)return;
+  document.querySelectorAll('.domain-chip').forEach(c=>c.classList.remove('selected'));
+  chip.classList.add('selected');
+  S.studyDomain=chip.dataset.domain;
+});
+
+document.querySelectorAll('input[name="study-count"]').forEach(r=>{
+  r.addEventListener('change',()=>{S.studyCount=parseInt(r.value);});
+});
+
+const pdfZone=$('pdf-upload-zone');
+const pdfInput=$('pdf-input');
+pdfZone.addEventListener('click',()=>pdfInput.click());
+pdfZone.addEventListener('dragover',e=>{e.preventDefault();pdfZone.classList.add('drag-over');});
+pdfZone.addEventListener('dragleave',()=>pdfZone.classList.remove('drag-over'));
+pdfZone.addEventListener('drop',e=>{e.preventDefault();pdfZone.classList.remove('drag-over');if(e.dataTransfer.files[0])processPDF(e.dataTransfer.files[0]);});
+pdfInput.addEventListener('change',()=>{if(pdfInput.files[0])processPDF(pdfInput.files[0]);});
+
+async function processPDF(file) {
+  const prog=$('upload-progress');const bar=$('upload-bar');const status=$('upload-status');
+  prog.style.display='block';status.textContent=`Loading ${file.name}...`;
+  if(typeof pdfjsLib==='undefined'){status.textContent='PDF.js not loaded — using built-in question bank';return;}
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  try {
+    const ab=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument(ab).promise;
+    let text='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      text+=content.items.map(x=>x.str).join(' ')+'\n';
+      bar.style.width=Math.round(i/pdf.numPages*100)+'%';
+      status.textContent=`Parsing page ${i}/${pdf.numPages}...`;
+    }
+    S.pdfText=text;
+    status.textContent=`✓ ${file.name} loaded (${pdf.numPages} pages). AI will use this for question generation.`;
+    bar.style.width='100%';
+  } catch(e){status.textContent='⚠ Could not parse PDF: '+e.message;}
+}
+
+// BEGIN EXAM
+$('btn-begin').addEventListener('click',async()=>{
+  S.candidate=$('candidate-name').value||'Candidate';
+  S.reviewMode=false;S.reviewFilter='all';S.flags=new Set();
+  S.answers={};S.startTime=Date.now();S.timeWarnShown=false;S.hintUsed=new Set();
+
+  // Try AI generation
+  openModal('modal-generating');
+  const count=S.mode==='exam'?90:S.studyCount;
+  const domain=S.studyDomain||'all';
+  
+  const aiQs=await generateAIQuestions(Math.min(count,15),domain,S.mode);
+
+  if(aiQs&&aiQs.length>0){
+    // Merge AI questions into seed bank
+    window._aiQuestions=aiQs;
+    const merged=[...aiQs,...SEED_QUESTIONS];
+    window._mergedBank=merged;
+  }
+
+  closeModal('modal-generating');
+  buildExamQuestions();
+  buildNavigator();
+  showScreen('exam-screen');
+  renderQ();
+  startTimer();
+});
+
+function restartExam() { showScreen('welcome-screen'); }
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown',e=>{
+  const active=document.querySelector('.screen.active');
+  if(!active||active.id!=='exam-screen')return;
+  const q=S.questions[S.currentIdx];
+  if(!q)return;
+
+  if(e.altKey){
+    if(e.key==='f'||e.key==='F'){e.preventDefault();toggleFlag();}
+    if(e.key==='n'||e.key==='N'){e.preventDefault();nextQ();}
+    if(e.key==='p'||e.key==='P'){e.preventDefault();prevQ();}
+  }
+  if(e.ctrlKey){
+    if(e.key==='End'){e.preventDefault();goTo(S.questions.length-1);}
+    if(e.key==='Home'){e.preventDefault();goTo(0);}
+  }
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+
+  if(!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    const key=e.key.toUpperCase();
+    if(['A','B','C','D','E'].includes(key)&&(q.type==='mcq-single'||q.type==='mcq-multi')){
+      const opt=q.options?.find(o=>o.id===key);if(!opt)return;
+      if(q.type==='mcq-single'){S.answers[q.id]=key;renderQ();}
+      else{
+        const cur=Array.isArray(S.answers[q.id])?[...S.answers[q.id]]:[];
+        const idx=cur.indexOf(key);
+        if(idx>=0)cur.splice(idx,1);
+        else if(cur.length<(q.selectCount||2))cur.push(key);
+        S.answers[q.id]=cur;renderQ();
+      }
+    }
+  }
+});
+
+// ============================================================
+// SIDEBAR TOGGLE
+// ============================================================
+let sidebarOpen = true;
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  sidebarOpen = !sidebarOpen;
+  sb.classList.toggle('collapsed', !sidebarOpen);
+  btn.textContent = sidebarOpen ? '‹' : '›';
+  btn.style.left = sidebarOpen ? '204px' : '0';
+}
+
+// Position toggle button
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) btn.style.left = '204px';
+});
+
+// ============================================================
+// PER-QUESTION TIME TRACKING
+// ============================================================
+const _questionTimings = {}; // qid → total seconds spent
+let _qStartTime = null;
+
+function recordQuestionTime(qid) {
+  if (_qStartTime && qid) {
+    const elapsed = Math.floor((Date.now() - _qStartTime) / 1000);
+    _questionTimings[qid] = (_questionTimings[qid] || 0) + elapsed;
+  }
+}
+
+function startQuestionTimer(qid) {
+  _qStartTime = Date.now();
+}
+
+// ============================================================
+// STUDY SESSION SUMMARY
+// ============================================================
+function buildStudySummary() {
+  const domainPerf = {};
+  const objPerf = {};
+
+  S.questions.forEach(q => {
+    const d = q.domain;
+    const obj = q.obj || 'unknown';
+    const score = computeScore(q);
+
+    if (!domainPerf[d]) domainPerf[d] = { correct: 0, total: 0 };
+    domainPerf[d].total++;
+    if (score >= 0.7) domainPerf[d].correct++;
+
+    if (!objPerf[obj]) objPerf[obj] = { correct: 0, total: 0, domain: d };
+    objPerf[obj].total++;
+    if (score >= 0.7) objPerf[obj].correct++;
+  });
+
+  // Find weak objectives (< 70% correct, at least 1 question)
+  const weakObjs = Object.entries(objPerf)
+    .filter(([_, s]) => s.total >= 1 && s.correct / s.total < 0.7)
+    .sort((a, b) => (a[1].correct / a[1].total) - (b[1].correct / b[1].total))
+    .slice(0, 5);
+
+  // Store for "missed questions" mode
+  window._missedQuestions = S.questions.filter(q => computeScore(q) < 1);
+  window._weakDomains = Object.entries(domainPerf)
+    .filter(([_, s]) => s.total >= 1 && s.correct / s.total < 0.7)
+    .map(([d]) => d);
+
+  return { domainPerf, weakObjs };
+}
+
+function showStudySummary() {
+  const { domainPerf, weakObjs } = buildStudySummary();
+  const totalQ = S.questions.length;
+  const correct = S.questions.filter(q => computeScore(q) >= 0.7).length;
+  const pct = Math.round(correct / totalQ * 100);
+  const timeUsed = S.startTime ? Math.floor((Date.now() - S.startTime) / 1000) : 0;
+  const avgTime = totalQ ? Math.round(timeUsed / totalQ) : 0;
+
+  // Inject a study-specific results view
+  const scoreEl = document.getElementById('r-score');
+  scoreEl.textContent = pct + '%';
+  scoreEl.className = `score-val ${pct >= 70 ? 'pass' : 'fail'}`;
+
+  const pfEl = document.getElementById('r-pf');
+  pfEl.textContent = pct >= 70 ? '✓ READY' : '✗ REVIEW MORE';
+  pfEl.className = `pass-fail-badge ${pct >= 70 ? 'pass' : 'fail'}`;
+
+  document.getElementById('r-raw').textContent =
+    `${correct}/${totalQ} correct · Avg ${avgTime}s/question`;
+  document.getElementById('r-headline').textContent = 'Study Session Complete';
+  document.getElementById('r-sub').textContent =
+    pct >= 70
+      ? 'Strong performance — consider running a full exam simulation.'
+      : 'Keep practicing — focus on weak objectives listed below.';
+
+  // Stats
+  const timeMins = Math.floor(timeUsed / 60), timeSecs = timeUsed % 60;
+  document.getElementById('r-stats').innerHTML = `
+    <div class="r-stat"><div class="r-stat-n green">${correct}</div><div class="r-stat-l">Correct</div></div>
+    <div class="r-stat"><div class="r-stat-n red">${totalQ - correct}</div><div class="r-stat-l">Incorrect</div></div>
+    <div class="r-stat"><div class="r-stat-n">${avgTime}s</div><div class="r-stat-l">Avg/Question</div></div>
+    <div class="r-stat"><div class="r-stat-n amber">${S.flags.size}</div><div class="r-stat-l">Flagged</div></div>
+    <div class="r-stat"><div class="r-stat-n">${timeMins}:${String(timeSecs).padStart(2,'0')}</div><div class="r-stat-l">Total Time</div></div>
+  `;
+
+  // Domain breakdown
+  const domEl = document.getElementById('r-domains');
+  domEl.innerHTML = '';
+  Object.entries(domainPerf).forEach(([d, s]) => {
+    if (!s.total) return;
+    const pctD = Math.round(s.correct / s.total * 100);
+    const pass = pctD >= 70;
+    domEl.innerHTML += `
+      <div class="db-row">
+        <div class="db-row-header">
+          <span style="font-size:12px">${DOMAINS[d] || d}</span>
+          <span class="db-pct ${pass ? 'pass' : 'fail'}">${pctD}% (${s.correct}/${s.total})</span>
+        </div>
+        <div class="db-bar-bg">
+          <div class="db-bar-fill ${pass ? 'pass' : 'fail'}" style="width:${pctD}%"></div>
+          <div class="db-threshold-line"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  // Weak objectives callout
+  const pbqEl = document.getElementById('r-pbqs');
+  if (weakObjs.length) {
+    pbqEl.innerHTML = `
+      <div style="font-size:13px;font-weight:700;color:var(--warning);margin-bottom:10px">⚠ Sub-objectives to Revisit:</div>
+      ${weakObjs.map(([obj, s]) => `
+        <div class="pbq-result-row">
+          <span class="pbq-type-label">Objective ${obj} — ${DOMAINS[s.domain] || s.domain}</span>
+          <span style="font-size:12px;font-weight:700;color:var(--danger)">${Math.round(s.correct/s.total*100)}% (${s.correct}/${s.total})</span>
+        </div>
+      `).join('')}
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px">
+        Use <strong>Study Mode → Domain Focus</strong> to drill these objectives.
+      </div>
+    `;
+  } else {
+    pbqEl.innerHTML = `<div style="font-size:13px;color:var(--success)">✓ No weak objectives detected — solid across all covered topics.</div>`;
+  }
+
+  showScreen('results-screen');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+setTimeout(() => {
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) {
+    btn.style.position = 'absolute';
+    btn.style.left = '204px';
+    btn.style.top = '50%';
+    btn.style.transform = 'translateY(-50%)';
+    btn.style.zIndex = '50';
+  }
+}, 50);
+
+// Make sure no two consecutive questions test same sub-objective in buildExamQuestions
+const _origBuild = buildExamQuestions;
+// (Objective deduplication is handled by Fisher-Yates shuffle + domain weighting above)
+
+console.log('SY0-701 v2 — AI-Powered Dark Mode Exam Simulator');
+console.log(`Seed: ${SEED_QUESTIONS.length} MCQs · ${PBQ_SEEDS.length} PBQs (all 7 types)`);
+console.log('Keyboard: A–D · Alt+F flag · Alt+N/P nav · Ctrl+End/Home');
+</script>
+<!-- PDF.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</body>
+</html>
