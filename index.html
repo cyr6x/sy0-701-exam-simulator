@@ -835,7 +835,7 @@ select, input { font-family: var(--font-ui); }
 
     <div class="ai-status">
       <div class="ai-dot"></div>
-      Claude AI engine active — questions generated from Messer &amp; Seidl study materials
+          SY0-701 Exam Simulator — questions from CompTIA Security+ SY0-701
     </div>
 
     <div class="setup-card">
@@ -2793,6 +2793,7 @@ function goToExamQ(idx) {
 // AI QUESTION GENERATION
 // ============================================================
 async function generateAIQuestions(count, domain, mode) {
+  return null; // No API key configured - using seed questions
   const status=$('modal-gen-status');
   if(status)status.textContent='Connecting to Claude AI engine...';
   
