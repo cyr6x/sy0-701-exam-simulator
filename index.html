@@ -670,11 +670,11 @@ select, input { font-family: var(--font-ui); }
 .db-row-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
 .db-pct { font-weight: 700; }
 .db-pct.pass { color: var(--success); }
-.db-pct.fail { color: var(--danger); }
+.db-pct.fail { color: var(--danger); } .db-pct.amber { color: var(--warning); }
 .db-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; position: relative; }
 .db-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
 .db-bar-fill.pass { background: var(--success); }
-.db-bar-fill.fail { background: var(--danger); }
+.db-bar-fill.fail { background: var(--danger); } .db-bar-fill.amber { background: var(--warning); }
 .db-threshold-line { position: absolute; top: 0; bottom: 0; left: 70%; width: 1px; background: rgba(255,255,255,0.2); }
 
 .pbq-breakdown-card {
@@ -844,12 +844,12 @@ select, input { font-family: var(--font-ui); }
         <div class="mode-card selected" data-mode="exam">
           <div class="mode-card-icon">📋</div>
           <div class="mode-card-title">Exam Mode</div>
-          <div class="mode-card-desc">90 questions · 90 min · No hints · Mirrors real exam conditions</div>
+          <div class="mode-card-desc">17 questions · 90 min · No hints · Mirrors real exam conditions</div>
         </div>
         <div class="mode-card" data-mode="study">
           <div class="mode-card-icon">📖</div>
           <div class="mode-card-title">Study Mode</div>
-          <div class="mode-card-desc">10–30 questions · Instant feedback · Hints available · Domain filter</div>
+          <div class="mode-card-desc">10–90 questions · Instant feedback · Hints available · Domain filter</div>
         </div>
       </div>
     </div>
@@ -868,6 +868,8 @@ select, input { font-family: var(--font-ui); }
           <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
             <input type="radio" name="study-count" value="30" style="accent-color:var(--accent)"> 30
           </label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="radio" name="study-count" value="60" style="accent-color:var(--accent)"> 60</label>
+                          <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="radio" name="study-count" value="90" style="accent-color:var(--accent)"> 90</label>
         </div>
       </div>
       <div style="margin-bottom:16px">
@@ -895,7 +897,7 @@ select, input { font-family: var(--font-ui); }
     </div>
 
     <div class="setup-card">
-      <h2>Study Materials <span class="tag">Optional</span></h2>
+      <h2>Study Materials <span class="tag" style="background:var(--warning-dim);color:var(--warning);border:1px solid var(--warning)">Coming Soon</span></h2>
       <div class="source-upload" id="pdf-upload-zone">
         <div class="source-upload-icon">📄</div>
         <div class="source-upload-text">Drop Messer / Seidl PDF files here or click to browse</div>
@@ -916,6 +918,7 @@ select, input { font-family: var(--font-ui); }
       <span id="begin-btn-text">Begin Exam</span> →
     </button>
   </div>
+      <div id="past-results-section" style="display:none" class="setup-card"><div id="past-results-list"></div></div>
 </div>
 
 <!-- ==================== EXAM SCREEN ==================== -->
@@ -1696,7 +1699,7 @@ function renderQ() {
     if (!S.hintUsed.has(q.id)) {
       const hintBtn = document.createElement('button');
       hintBtn.className = 'hint-btn';
-      hintBtn.innerHTML = '💡 Hint <span style="color:var(--text-dim);font-size:10px">(−10% score)</span>';
+      hintBtn.innerHTML = '💡 Hint <span style="color:var(--text-dim);font-size:10px">(−−10% score penalty in Study Mode)</span>';
       hintBtn.onclick = () => { S.hintUsed.add(q.id); showHint(q, hintPanel); };
       card.appendChild(hintBtn);
     }
@@ -2527,7 +2530,7 @@ function toggleFlag() {
 // ============================================================
 // END EXAM / SCORING
 // ============================================================
-function triggerEndExam() {
+function triggerEndExam() { if(S.reviewMode){showScreen('results-screen');return;}
   const total=S.questions.length;
   const answered=S.questions.filter(q=>isAnswered(q.id)).length;
   $('m-answered').textContent=answered;
@@ -2688,10 +2691,10 @@ function computeAndShowResults() {
       <div class="db-row">
         <div class="db-row-header">
           <span style="font-size:12px">${DOMAINS[d]}</span>
-          <span class="db-pct ${pass?'pass':'fail'}">${pct}%</span>
+          <span class="db-pct ${pct>=75?'pass':pct>=50?'amber':'fail'}">${pct}%</span>
         </div>
         <div class="db-bar-bg">
-          <div class="db-bar-fill ${pass?'pass':'fail'}" style="width:${pct}%"></div>
+          <div class="db-bar-fill ${pct>=75?'pass':pct>=50?'amber':'fail'}" style="width:${pct}%"></div>
           <div class="db-threshold-line" title="70% passing threshold"></div>
         </div>
       </div>
@@ -2713,13 +2716,14 @@ function computeAndShowResults() {
     `;
   });
 
+    saveSessionResult(Math.round((S.questions.reduce((t,q)=>t+(computeScore(q)*(q.type?.startsWith('pbq')?2:1)),0)/S.questions.reduce((t,q)=>t+(q.type?.startsWith('pbq')?2:1),0))*100)||0, S.questions.reduce((t,q)=>t+(computeScore(q)*(q.type?.startsWith('pbq')?2:1)),0)/S.questions.reduce((t,q)=>t+(q.type?.startsWith('pbq')?2:1),0)>=0.7, S.mode);
   showScreen('results-screen');
 }
 
 // ============================================================
 // REVIEW MODE
 // ============================================================
-function showReview() { S.reviewFilter='all'; buildReview(); showScreen('review-screen'); }
+function showReview() { S.reviewFilter='all'; buildReview(); showScreen('review-screen'); setTimeout(()=>{const rs=document.getElementById('review-screen');if(rs)rs.scrollTop=0;},50); showScreen('review-screen'); }
 function applyReviewFilter(btn, filter) {
   document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -2770,7 +2774,7 @@ function buildReview() {
       body.appendChild(exp);
     }
 
-    const jumpBtn=document.createElement('button');
+    if(q.type==='mcq-single'||q.type==='mcq-multi'){const ol=document.createElement('div');ol.style.cssText='margin:10px 0;display:flex;flex-direction:column;gap:5px;';const ans=S.answers[q.id]||(q.type==='mcq-multi'?[]:null);q.options.forEach(opt=>{const isSel=q.type==='mcq-multi'?Array.isArray(ans)&&ans.includes(opt.id):ans===opt.id;const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);font-size:13px;';if(isSel&&opt.correct){row.style.background='var(--success-dim)';row.style.borderColor='var(--success)';}else if(isSel&&!opt.correct){row.style.background='var(--danger-dim)';row.style.borderColor='var(--danger)';}else if(!isSel&&opt.correct){row.style.background='var(--success-dim)';row.style.borderColor='var(--success)';row.style.borderStyle='dashed';}else{row.style.opacity='0.5';}const lbl=document.createElement('span');lbl.style.cssText='width:22px;height:22px;border-radius:4px;background:var(--border);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;';if(isSel&&opt.correct){lbl.style.background='var(--success)';lbl.style.color='#0a2e1a';}else if(isSel&&!opt.correct){lbl.style.background='var(--danger)';lbl.style.color='white';}lbl.textContent=opt.id;const txt=document.createElement('span');txt.textContent=opt.text;const mk=document.createElement('span');mk.style.marginLeft='auto';if(isSel&&opt.correct)mk.textContent='✓';else if(isSel&&!opt.correct)mk.textContent='✗';else if(!isSel&&opt.correct){mk.textContent='✓';mk.style.color='var(--success)';}row.appendChild(lbl);row.appendChild(txt);row.appendChild(mk);ol.appendChild(row);});body.appendChild(ol);} const jumpBtn=document.createElement('button');
     jumpBtn.style.cssText='margin-top:8px;background:none;border:1px solid var(--border);color:var(--text-muted);padding:4px 12px;border-radius:3px;font-size:11px;cursor:pointer;';
     jumpBtn.textContent='View Question →';jumpBtn.onclick=()=>goToExamQ(realIdx);
     body.appendChild(jumpBtn);
@@ -2915,7 +2919,8 @@ $('btn-begin').addEventListener('click',async()=>{
   startTimer();
 });
 
-function restartExam() { showScreen('welcome-screen'); }
+function saveSessionResult(score,passed,mode){try{const h=JSON.parse(localStorage.getItem('sy0701_history')||'[]');h.unshift({date:new Date().toLocaleDateString(),time:new Date().toLocaleTimeString(),score,passed,mode});localStorage.setItem('sy0701_history',JSON.stringify(h.slice(0,5)));}catch(e){}} function renderPastResults(){const el=document.getElementById('past-results-section');if(!el)return;try{const h=JSON.parse(localStorage.getItem('sy0701_history')||'[]');if(!h.length){el.style.display='none';return;}el.style.display='block';const list=document.getElementById('past-results-list');if(!list)return;list.innerHTML=h.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;margin-bottom:6px"><span style="color:var(--text-muted)">${r.date} ${r.time}</span><span style="font-weight:700;color:${r.passed?'var(--success)':'var(--danger)'}">${r.score}% ${r.passed?'PASS':'FAIL'}</span><span style="color:var(--text-muted)">${r.mode||'exam'}</span></div>`).join('');} catch(e){}}
+function restartExam() { showScreen('welcome-screen'); renderPastResults(); }() { showScreen('welcome-screen'); }
 
 // ============================================================
 // KEYBOARD SHORTCUTS
@@ -3093,7 +3098,7 @@ function showStudySummary() {
         </div>
       `).join('')}
       <div style="font-size:12px;color:var(--text-muted);margin-top:10px">
-        Use <strong>Study Mode → Domain Focus</strong> to drill these objectives.
+        <button onclick="restartExam()" style="margin-top:4px;padding:6px 14px;background:var(--accent);border:none;border-radius:6px;color:white;font-size:12px;font-weight:700;cursor:pointer">📚 Launch Study Mode</button → Domain Focus</strong> to drill these objectives.
       </div>
     `;
   } else {
@@ -3107,6 +3112,7 @@ function showStudySummary() {
 // INIT
 // ============================================================
 setTimeout(() => {
+    renderPastResults();
   const btn = document.getElementById('sidebar-toggle');
   if (btn) {
     btn.style.position = 'absolute';
